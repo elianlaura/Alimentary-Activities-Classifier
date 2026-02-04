@@ -1,79 +1,108 @@
-# Jupyter Notebooks and python script for the Viva Bem Software Deliveries
+# Deo-Classifier: Human Activity Recognition with Attention-BiGRU
 
-##Abstract
+## Table of Contents
+- [Abstract](#abstract)
+- [Files in This Repository](#files-in-this-repository)
+- [Installation](#installation-of-the-conda-environment)
+- [Dependencies](#dependencies)
+- [Running the Scripts](#running-the-python-script)
+- [Model Architecture](#model-architecture)
+- [Results](#results)
+- [Contributing](#contributing)
+- [License](#license)
+- [Troubleshooting](#troubleshooting)
+- [Citation](#citation)
+- [Support](#support)
 
-The Alimentary Activity Classification project implements a deep learning model based on an Attention-enhanced Bidirectional Gated Recurrent Unit (BiGRU) architecture for sequence classification tasks. The code consists of two main scripts: cabigru_deo_train.py for training and cabigru_deo_test.py for evaluating the model. The training script processes a time-series dataset, applies a feature extraction pipeline, and trains a BiGRU model with self-attention to improve classification accuracy. It uses categorical focal loss to handle class imbalances and custom callbacks to track performance. The Viva-Bem dataset used involves activity recognition, particularly distinguishing between different actions such as eating, drinking, or other movements, as inferred from the dataset name (eatdrinkanother). The testing script loads the best-trained model, performs inference on the test set, and evaluates performance using metrics such as balanced accuracy, F1-score, and Cohen's Kappa. The results, including loss curves and evaluation reports, are saved for further analysis. This model is suitable for applications in human activity recognition, gesture classification, and other sequential classification tasks.
+## Abstract
 
-Files in This Repository
-cabigru_deo_train.py: This script trains the Attention-BiGRU model on a specified dataset.
-cabigru_deo_test.py: This script evaluates the trained model on a test dataset.
+The Deo-Classifier is a deep learning project for Human Activity Recognition (HAR) using sensor data from accelerometers, gyroscopes, and magnetometers. It employs an Attention-enhanced Bidirectional Gated Recurrent Unit (BiGRU) model to classify activities such as drinking, eating, and other movements. The project includes training and testing scripts that handle data preprocessing, model training with focal loss for imbalanced classes, and evaluation with metrics like accuracy, F1-score, and Cohen's Kappa. Key features include self-attention mechanisms for better sequence understanding and custom callbacks for training monitoring. This framework is suitable for HAR, gesture recognition, and similar sequential classification tasks.
 
-
-## Getting Started
-
-**The Viva Bem software delivery** is a Jupyter Notebook. This material encapsulates all the process steps and important details.
-
-Before you running our code, you must go to the [/data) and download the corresponding dataset in the path: data/. 
-
-[Jupyter notebooks](https://jupyter.org/) allow a high-level of interactive learning, as code, text description, and visualization combined in one place.
-
-## Prerequisites
-
-You will require Jupyter notebook to run this code.
-
-Install Jupyter by
-download from the [official website](https://jupyter.org/), or
-using automatic installer of, e.g., [Anaconda](https://www.anaconda.com/distribution/).
-
-Start the Jupyter server.
-
+## Files in This Repository
+- `cabigru_deo_train.py`: This script trains the Attention-BiGRU model on a specified dataset.
+- `cabigru_deo_test.py`: This script evaluates the trained model on a test dataset.
+- `model_builder.py`: Contains functions for building the neural network models.
+- `plotting_utils.py`: Utilities for plotting training curves and results.
+- `training_utils.py`: Helper functions for training processes.
+- `utils_cab.py`: Additional utility functions.
+- `requirements.txt`: List of Python dependencies with versions.
+- `LICENSE`: Custom license with usage restrictions.
+- `README.md`: This file.
 
 ### Installation of the Conda Environment
 
-Install [miniconda](https://docs.conda.io/en/latest/miniconda.html)
-Open command prompt
-Run the following code
-`conda update --all`
-`conda create --name <env_name> python=3.9 --file requirements.txt`
-`conda activate <env_name>`
+Install [miniconda](https://docs.conda.io/en/latest/miniconda.html).  
+Open command prompt and run:  
+```bash
+conda update --all
+conda create --name <env_name> python=3.9 --file requirements.txt
+conda activate <env_name>
+```
 
-In the new conda environment, install TensorFlow (2.11 - 2.14) with GPU support according to the [official website] (https://www.tensorflow.org/install/pip)
-
-To finish the installation of jupyter extensions, run:
-`jupyter contrib nbextension install --user`
-
-Select the folder with notebooks and run `jupyter notebook`
+In the new conda environment, install TensorFlow (2.11 - 2.14) with GPU support according to the [official website](https://www.tensorflow.org/install/pip).
 
 ### Dependencies
 
-matplotlib>=3.4.2
-mlxtend>=0.23.1
-numpy>=1.22.3
-pandas>=1.2.4
-scikit-learn>=1.3.2
-scipy>=1.7.0
-seaborn>=0.11.1
-tensorboard>=2.5.0
-tensorflow-estimator>=2.5.0
-tensorflow-gpu>=2.5.0
+- pandas==2.3.3
+- numpy==1.26.4
+- matplotlib==3.7.1
+- tensorflow==2.15.0
+- scikit-learn==1.3.0
+- torch==1.13.1
 
-### Running Jupyter Notebook
+### Running the Python Script
 
+To run the scripts, open an Anaconda prompt, navigate to the cloned repository directory, and go into the `src` folder. Run the training script with optimal parameters:  
 
-To run Jupyter Notebook, open an Anaconda prompt and navigate to the directory in which the cloned repository is. By default Jupyter is setup to open your home directory.
+```bash
+python src/cabigru_deo_train.py
+```
 
- Once you are in the correct folder, run Jupyter:
+For testing:  
+```bash
+python src/cabigru_deo_test.py
+```
 
-**jupyter notebook** or **jupyter-notebook** (depending on your operating system).
+## Model Architecture
 
-This should open Jupyter Notebooks in a browser window. On occasion, Jupyter may not be able to open a window and will give you a URL to paste in your browser. Please do so, if required.
+The model uses a Bidirectional Gated Recurrent Unit (BiGRU) enhanced with self-attention mechanisms for sequence classification. It incorporates categorical focal loss to handle class imbalances and includes custom callbacks for monitoring training progress, such as early stopping and learning rate scheduling.
 
-### Running the python script
+## Results
 
-To run the Python script, open an Anaconda prompt and navigate to the directory where the cloned repository is located. Next, go into the <code>src</code> folder to run the following command with the parameter values that gave us the best performance:
+*Performance metrics from experiments (to be updated with actual results):*  
+- Balanced Accuracy: TBD  
+- F1-Score: TBD  
+- Cohen's Kappa: TBD  
 
-python3 heart_rate_flag.py
+Loss curves and evaluation reports are generated during testing.
 
+## Contributing
+
+Contributions are welcome! Please fork the repository, make your changes, and submit a pull request. For major changes, open an issue first to discuss.
+
+## License
+
+This project is licensed under a custom license. See the [LICENSE](LICENSE) file for details. Note: Commercial use and replication in other projects require prior written permission.
+
+## Troubleshooting
+
+- **GPU Issues**: Ensure TensorFlow is installed with GPU support and CUDA is properly configured.
+- **Dependency Conflicts**: Use the specified versions in `requirements.txt` to avoid issues.
+- **Data Format**: Ensure your dataset matches the expected format (time-series sensor data).
+
+## Citation
+
+If you use this project in your research, please cite:  
+
+```
+@misc{deo-classifier,
+  title={Deo-Classifier: Human Activity Recognition with Attention-BiGRU},
+  author={Your Name},
+  year={2026},
+  url={https://github.com/elianlaura/Deo-Classifier}
+}
+```
 
 ## Support
-For further assistance please contact us.
+
+For further assistance, open an issue on [GitHub](https://github.com/elianlaura/Deo-Classifier/issues) or contact [elianlaura](https://github.com/elianlaura).
