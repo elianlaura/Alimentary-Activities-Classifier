@@ -70,9 +70,9 @@ The model uses a Bidirectional Gated Recurrent Unit (BiGRU) enhanced with self-a
 ## Results
 
 *Performance metrics from experiments (to be updated with actual results):*  
-- Balanced Accuracy: TBD  
-- F1-Score: TBD  
-- Cohen's Kappa: TBD  
+- Balanced Accuracy: 86.55
+- Sensitivity: [80.53 86.60 92.51]
+- Specificity: [96.62 95.62 89.22]
 
 Loss curves and evaluation reports are generated during testing.
 
