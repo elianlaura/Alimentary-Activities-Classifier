@@ -11,6 +11,7 @@
 - [Contributing](#contributing)
 - [License](#license)
 - [Troubleshooting](#troubleshooting)
+- [Code Source and Authors](#code-source-and-authors)
 - [Citation](#citation)
 - [Support](#support)
 
@@ -89,6 +90,23 @@ This project is licensed under a custom license. See the [LICENSE](LICENSE) file
 - **GPU Issues**: Ensure TensorFlow is installed with GPU support and CUDA is properly configured.
 - **Dependency Conflicts**: Use the specified versions in `requirements.txt` to avoid issues.
 - **Data Format**: Ensure your dataset matches the expected format (time-series sensor data).
+
+## Code Source and Authors
+
+This repository contains original Deo-Classifier code and also includes imported/adapted diffusion-related code under `pad_ts/`.
+
+Source project for `pad_ts/`:
+- PaD-TS repository: https://github.com/wmd3i/PaD-TS
+- Paper: Population Aware Diffusion for Time Series Generation (AAAI 2025)
+
+Original PaD-TS authors:
+- Yang Li
+- Han Meng
+- Zhenyu Bi
+- Ingolv T. Urnes
+- Haipeng Chen
+
+If you use the diffusion module in this repository, please cite the original PaD-TS work in addition to citing Deo-Classifier.
 
 ## Citation
 

@@ -1,0 +1,12 @@
+{
+    "python-envs.pythonProjects": [
+        {
+            "path": "",
+            "envManager": "ms-python.python:system",
+            "packageManager": "ms-python.python:pip"
+        }
+    ],
+        
+    "python.defaultInterpreterPath": "/home/elian.riveros/miniconda3/envs/padts/bin/python"
+
+}

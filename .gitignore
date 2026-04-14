@@ -6,3 +6,5 @@ data/
 *.pkl
 __pycache__/
 *.pyc
+*.yaml
+*.code-workspace
