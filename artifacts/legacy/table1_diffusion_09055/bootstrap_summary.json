@@ -1,0 +1,139 @@
+{
+  "protocol": "SnsEnc/docs/protocolo_bootstrap_deo_09055.md",
+  "stage": "paso_2_bootstrap",
+  "generated_at": "2026-09-22T13:30:20-0300",
+  "command": "/home/elian.riveros/miniconda3/envs/a2-project/bin/python /home/elian.riveros/dl-13-elian/notebooks/workspaces/lstm-har/MultiTask-LSTM-HAR-main/bootstrap_deo_09055/scripts/02_run_bootstrap.py --out-dir /home/elian.riveros/dl-13-elian/notebooks/workspaces/lstm-har/MultiTask-LSTM-HAR-main/bootstrap_deo_09055/results/bootstrap_20260922-132658_95781",
+  "method": {
+    "name": "bootstrap percentil bilateral del 95 % con remuestreo de sujetos completos",
+    "resampling_unit": "sujeto de prueba completo (cluster bootstrap)",
+    "reference": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7148287/",
+    "replicates": 10000,
+    "seed": 20251028,
+    "rng": "numpy.random.default_rng (PCG64), integers(0, 29) con reemplazo",
+    "alpha": 0.05,
+    "percentiles": [
+      2.5,
+      97.5
+    ],
+    "percentile_interpolation": "numpy.percentile por defecto (lineal)",
+    "subject_order": [
+      "S1072",
+      "S1066",
+      "S1562",
+      "S1685",
+      "S1010",
+      "S1544",
+      "S1001",
+      "S1540",
+      "S1684",
+      "S1347",
+      "S1542",
+      "S1012",
+      "S1077",
+      "S1068",
+      "S1006",
+      "S1360",
+      "S1053",
+      "S1049",
+      "S1002",
+      "S1672",
+      "S1541",
+      "S1357",
+      "S1352",
+      "S1353",
+      "S1076",
+      "S1534",
+      "S1081",
+      "S1689",
+      "S1691"
+    ],
+    "model": "checkpoint historico fijo en todas las replicas",
+    "classes": [
+      0,
+      1,
+      2
+    ]
+  },
+  "observed": {
+    "balanced_accuracy": 0.905541577682945,
+    "balanced_accuracy_4dp": "0.9055",
+    "recalls": {
+      "drink": 0.8848570849381715,
+      "eat": 0.9013923326339882,
+      "another": 0.9303753154766751
+    },
+    "confusion_matrix": [
+      [
+        4365,
+        310,
+        258
+      ],
+      [
+        304,
+        4726,
+        213
+      ],
+      [
+        3121,
+        1155,
+        57139
+      ]
+    ],
+    "class_support": {
+      "drink": 4933,
+      "eat": 5243,
+      "another": 61415
+    },
+    "n_subjects": 29,
+    "n_windows": 71591
+  },
+  "interval": {
+    "ci95_balanced_accuracy": [
+      0.8882669437292106,
+      0.9223040741554365
+    ],
+    "ci95_recalls": {
+      "drink": [
+        0.848675260898362,
+        0.9160391858458858
+      ],
+      "eat": [
+        0.8729199257779046,
+        0.9279315860562639
+      ],
+      "another": [
+        0.9149122368122445,
+        0.9441534232120051
+      ]
+    },
+    "status": "publicable"
+  },
+  "diagnostics": {
+    "invalid_replicates": 0,
+    "subjects_missing_a_true_class": [],
+    "bootstrap_mean": 0.9054826635684065,
+    "bootstrap_sd": 0.008720530320478757,
+    "bootstrap_median": 0.9055695661749024,
+    "bootstrap_min": 0.8701335043559973,
+    "bootstrap_max": 0.9367785811454077,
+    "bias_mean_minus_observed": -5.891411453851081e-05,
+    "note": "La estimacion puntual publicada es la BA observada; la media de las replicas es solo diagnostico. La informacion independiente proviene de 29 sujetos."
+  },
+  "environment": {
+    "python": "3.10.18",
+    "numpy": "2.2.6",
+    "pandas": "2.2.3",
+    "node": "dl-08"
+  },
+  "inputs": {
+    "subject_confusion_matrices": {
+      "path": "/home/elian.riveros/dl-13-elian/notebooks/workspaces/lstm-har/MultiTask-LSTM-HAR-main/bootstrap_deo_09055/results/bootstrap_20260922-132658_95781/subject_confusion_matrices.csv",
+      "bytes": 3474,
+      "mtime_epoch": 1790094457,
+      "sha256": "d7470bf2c7425eabcd5dcea389b802957b8bc5c3d9cd78d19859253e92471c89"
+    }
+  },
+  "outputs": {
+    "bootstrap_replicates": "/home/elian.riveros/dl-13-elian/notebooks/workspaces/lstm-har/MultiTask-LSTM-HAR-main/bootstrap_deo_09055/results/bootstrap_20260922-132658_95781/bootstrap_replicates.csv"
+  }
+}

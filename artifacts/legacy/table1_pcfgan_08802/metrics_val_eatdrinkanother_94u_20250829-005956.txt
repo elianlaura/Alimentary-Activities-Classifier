@@ -1,0 +1,28 @@
+Dataset: eatdrinkanother_94u
+mAP score: 0.6855
+precision: 0.9309
+recall: 0.9052
+f1_score: 0.9133
+balanced_accuracy_score: 0.8838
+
+
+F1-score (None):[0.6318 0.7944 0.9466]
+F1-score (weighted):0.9133
+F1-score (macro):0.7909
+F1-score (micro):0.9052
+classification_report:              precision    recall  f1-score   support
+
+           0       0.52      0.81      0.63      1904
+           1       0.69      0.93      0.79      1912
+           2       0.98      0.91      0.95     22957
+
+   micro avg       0.91      0.91      0.91     26773
+   macro avg       0.73      0.88      0.79     26773
+weighted avg       0.93      0.91      0.91     26773
+ samples avg       0.91      0.91      0.91     26773
+
+['DRINK' 'EAT' 'ANOTHER']
+
+
+Sensitivity per class:, [np.float64(0.8057), np.float64(0.9346), np.float64(0.9111)]
+Specificity per class:, [np.float64(0.943), np.float64(0.9678), np.float64(0.9164)]

@@ -1,0 +1,1 @@
+autoencoder_s_nusers_1_0.5_0_de_fake_padts_94u_1e-05_0.5_256_20_-1_3

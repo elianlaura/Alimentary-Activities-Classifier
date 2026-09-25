@@ -1,3 +1,8 @@
+> **DEO usage.** In this repository the model is driven by `train_deo.py` and `sample_deo.py`
+> (see the top-level README). `Model.py` contains both variants: `use_gru=False` is the original
+> attention architecture, `use_gru=True` replaces self-attention by bidirectional GRU blocks.
+> `run.py` / `run_test.py` and `configs/` are the original PaD-TS entry points, kept for reference.
+
 # <h1 align="center">PaD-TS</h1>
 
 

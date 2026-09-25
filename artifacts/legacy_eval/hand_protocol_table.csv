@@ -1,0 +1,8 @@
+label,hand,dominance,moment,windows,class
+0,R,D,MA,8608,DRINK
+0,R,D,MB,8530,DRINK
+1,R,D,MA,9044,EAT
+1,R,D,MB,8948,EAT
+2,L,ND,MA,87127,OTHER
+2,L,ND,MB,88154,OTHER
+2,unknown,unknown,unknown,35918,OTHER

@@ -1,0 +1,2 @@
+time,dataset,n_epochs,lr,do,batch,layers,h_units,lstm_reg,clf_reg,clipvalue,train,train_bal,f1_score_train_we,kappa_train,val,val_bal,f1_score_val_we,kappa_val,test,test_bal,f1_score_test_we,kappa_test,obs,modeltype,uuid_val,uuid_test,ov,path
+20260412-114015,eatdrinkanother_94u,100,1e-05,0.5,128,-1,100,0.0001,0.0001,5,0.9094,0.8735,0.917,0.6991,0.8997,0.8379,0.9071,0.661,0.8932,0.8338,0.9021,0.6458,,autoencoder_s,,,,

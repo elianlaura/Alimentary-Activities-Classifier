@@ -1,0 +1,18 @@
+# TensorFlow environment: data preparation, corpora, pretraining, fine-tuning, analysis.
+# Versions of the environment that reproduced the archived 0.9055 checkpoint (a2-project).
+#   conda env create -f environment/deo-tf.yml
+name: deo-tf
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip
+  - pip:
+      - tensorflow[and-cuda]==2.20.0
+      - keras==3.12.1
+      - tf_keras==2.20.1   # only to load the archived 2N checkpoint (saved with Keras 2.15)
+      - numpy==2.2.6
+      - pandas==2.2.3
+      - scipy==1.15.3
+      - scikit-learn==1.6.1
+      - matplotlib==3.10.3

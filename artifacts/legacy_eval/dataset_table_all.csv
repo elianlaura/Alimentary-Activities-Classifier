@@ -1,0 +1,9 @@
+dataset,partition,subjects,windows,DRINK,EAT,OTHER,minority_share_%
+deo,train,55,147965,10301,10837,126827,14.29
+deo,val,10,26773,1904,1912,22957,14.25
+deo,test,29,71591,4933,5243,61415,14.21
+deo,all,94,246329,17138,17992,211199,14.26
+deo_samehand,train,58,41871,6700,7091,28080,32.94
+deo_samehand,val,10,7289,1194,1204,4891,32.9
+deo_samehand,test,29,20981,3373,3561,14047,33.05
+deo_samehand,all,97,70141,11267,11856,47018,32.97

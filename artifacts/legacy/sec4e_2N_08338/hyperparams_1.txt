@@ -1,0 +1,2 @@
+autoencoder_s_0_nusers_1_0.5_0_eatdrinkanother_94u_200_1e-05_0.5_128_100_-1_3_gelu_deep
+saved_models/recurrent_models_20260407-095317/de_rec_fake_94u_concat3_1f_autoencoder_s_20260407-095328/best_model_de_rec_fake_94u_concat3_20260407-095328.keras

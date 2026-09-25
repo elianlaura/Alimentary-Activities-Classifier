@@ -1,0 +1,33 @@
+{
+  "model": "artifacts/legacy/table1_diffusion_09055/best_model_eatdrinkanother_94u_20251028-174115.keras",
+  "params_total": 546874,
+  "params_encoder": 348215,
+  "params_autoencoder_stage1": 498548,
+  "params_head": 198659,
+  "flops_per_window": 35490170,
+  "keras_file_mb": 2.2194337844848633,
+  "fp32_weights_mb": 2.0861587524414062,
+  "keras_cpu_latency_1thread": {
+    "median_ms": 42.51791909337044,
+    "p90_ms": 55.70970438420772
+  },
+  "tflite_fp32_builtin_ops_only": false,
+  "tflite_fp32_mb": 2.1662940979003906,
+  "tflite_fp32": "failed: Select TensorFlow op(s), included in the given model, is(are) not supported by this interpreter. Make sure you apply/link the Flex delegate before inference. For the Android, it can be resolved by adding \"org.tensorflow:tensorflow-lite-select-tf-ops\" dependency. See instructions: https://www.tensorf",
+  "tflite_int8_dynamic_builtin_ops_only": false,
+  "tflite_int8_dynamic_mb": 0.6725234985351562,
+  "tflite_int8_dynamic": "failed: Select TensorFlow op(s), included in the given model, is(are) not supported by this interpreter. Make sure you apply/link the Flex delegate before inference. For the Android, it can be resolved by adding \"org.tensorflow:tensorflow-lite-select-tf-ops\" dependency. See instructions: https://www.tensorf",
+  "peak_rss_mb": 1024.87890625,
+  "environment": {
+    "python": "3.10.18",
+    "host": "dl-13",
+    "slurm_job_id": null,
+    "slurm_array_task_id": null,
+    "cuda_visible_devices": "",
+    "numpy": "2.2.6",
+    "tensorflow": "2.20.0",
+    "keras": "3.12.1",
+    "gpus": [],
+    "gpu_names": []
+  }
+}

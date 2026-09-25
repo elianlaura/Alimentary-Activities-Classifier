@@ -1,0 +1,2 @@
+autoencoder_s_1_nusers_1_0.5_0_eatdrinkanother_94u_200_0.0001_0.5_128_50_-1_3_silu_classic
+saved_models_prev/recurrent_models_20251011-123315/de_fake_padts_94u_1f_autoencoder_s_20251011-123937/best_model_de_fake_padts_94u_20251011-123937.keras

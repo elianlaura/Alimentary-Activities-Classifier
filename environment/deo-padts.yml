@@ -1,0 +1,19 @@
+# PyTorch environment: PaD-TS generator training and sampling (pad_ts/*_deo.py).
+# Versions of the environment used for the legacy generator (padts).
+#   conda env create -f environment/deo-padts.yml
+name: deo-padts
+channels:
+  - conda-forge
+dependencies:
+  - python=3.9
+  - pip
+  - pip:
+      - --extra-index-url https://download.pytorch.org/whl/cu121
+      - torch==2.2.2
+      - timm==0.9.16
+      - numpy==1.24.3
+      - scipy
+      - pandas
+      - scikit-learn
+      - tqdm
+      - torchsummary

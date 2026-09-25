@@ -1,0 +1,74 @@
+{
+  "environment": {
+    "python": "3.10.18",
+    "host": "dl-13",
+    "slurm_job_id": null,
+    "slurm_array_task_id": null,
+    "cuda_visible_devices": "",
+    "numpy": "2.2.6",
+    "tensorflow": "2.20.0",
+    "keras": "3.12.1",
+    "gpus": [],
+    "gpu_names": []
+  },
+  "n_test_windows": 71591,
+  "class_counts": [
+    4933,
+    5243,
+    61415
+  ],
+  "runs": {
+    "table1_diffusion_09055": {
+      "checkpoint": "artifacts/legacy/table1_diffusion_09055/best_model_eatdrinkanother_94u_20251028-174115.keras",
+      "balanced_accuracy": 0.905541577682945,
+      "archived_balanced_accuracy": 0.9055,
+      "match_4dp": true,
+      "mAP_hard": 0.7271867704064136,
+      "mAP_score": 0.9191812763044135,
+      "auc_score": [
+        0.9741449127085082,
+        0.9859782094862037,
+        0.986845631515307
+      ]
+    },
+    "table1_noSynthetic_08655": {
+      "checkpoint": "artifacts/legacy/table1_noSynthetic_08655/best_model_eatdrinkanother_94u_20251028-210517.keras",
+      "balanced_accuracy": 0.8655041289739914,
+      "archived_balanced_accuracy": 0.8655,
+      "match_4dp": true,
+      "mAP_hard": 0.6427074092988454,
+      "mAP_score": 0.8740553383936662,
+      "auc_score": [
+        0.9616058885546871,
+        0.9725897926745576,
+        0.981035551545906
+      ]
+    },
+    "table1_pcfgan_08802": {
+      "checkpoint": "artifacts/legacy/table1_pcfgan_08802/best_model_eatdrinkanother_94u_20250829-005956.keras",
+      "balanced_accuracy": 0.8801960537422405,
+      "archived_balanced_accuracy": 0.8802,
+      "match_4dp": true,
+      "mAP_hard": 0.6652918788467591,
+      "mAP_score": 0.8972026144952009,
+      "auc_score": [
+        0.9709841815215422,
+        0.9805531847916811,
+        0.9758793600297387
+      ]
+    },
+    "sec4e_2N_08338": {
+      "checkpoint": "artifacts/legacy/sec4e_2N_08338/best_model_eatdrinkanother_94u_20260412-114015.keras",
+      "balanced_accuracy": 0.8338106374876735,
+      "archived_balanced_accuracy": 0.8338,
+      "match_4dp": true,
+      "mAP_hard": 0.6307993131170594,
+      "mAP_score": 0.8477968264974648,
+      "auc_score": [
+        0.9522685171857665,
+        0.9470313065938306,
+        0.9665655608405952
+      ]
+    }
+  }
+}

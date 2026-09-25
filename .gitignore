@@ -1,10 +1,21 @@
-# Ignore model files and large data
-saved_models/
-misc/
+# data and experiment outputs never go to git (see docs/DATA.md)
 data/
+runs/
+*.npy
+*.npz
+*.csv.gz
+*.pt
 *.h5
 *.pkl
+logs/
+# cluster-specific settings
+configs/cluster.env
+# python
 __pycache__/
 *.pyc
-*.yaml
+.ipynb_checkpoints/
+# editors
+.vscode/
 *.code-workspace
+# archived checkpoints ARE versioned (small, needed to reproduce Table I)
+!artifacts/legacy/**/*.keras
