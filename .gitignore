@@ -10,6 +10,10 @@ runs/
 logs/
 # cluster-specific settings
 configs/cluster.env
+# local-only folders
+slurm/
+docs/
+configs/
 # python
 __pycache__/
 *.pyc
