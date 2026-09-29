@@ -68,13 +68,16 @@ pretraining. Generator training and sampling resume from their last checkpoint.
 | 4 corpora | `scripts/build_corpus.py` | tf | `corpora/<name>/corpus.npy` (float16) + manifest |
 | 5 pretraining | `scripts/pretrain.py` | tf | `pretrain/<corpus>/seed<k>/autoencoder.keras` |
 | 6 fine-tuning | `scripts/finetune.py` | tf | `finetune/<dataset>/<condition>/seed<k>/` metrics, predictions, history |
-| 7 analysis | `scripts/analyze.py` | tf | `analysis/{summary.md, comparisons.md, volume_curve.pdf, learning_curves.pdf, class_balance.csv, cost.csv}` |
+| 7 analysis | `scripts/analyze.py` | tf | `analysis/{summary.md, bootstrap_ci.md, comparisons.md, volume_curve.pdf, learning_curves.pdf, class_balance.csv, cost.csv}` |
 | extra | `scripts/complexity.py`, `scripts/plot_synthetic.py`, `scripts/describe_models.py` | tf | complexity table, real vs synthetic figure, layer tables |
 
 Corrected protocol (differences with the archived runs in `docs/REPRODUCIBILITY.md`): fixed
-subject split; generators trained per class on training subjects only; both stages z-scored with
-training-subject statistics; one fixed fine-tuning configuration (deep head, lr 1e-4, focal loss,
-<= 50 epochs); best epoch chosen on validation balanced accuracy; test evaluated once per seed;
+subject split; generators trained per class on training subjects only (windows with physically
+impossible accelerometer values, > 16 g, left out of the generator data); both stages z-scored with
+training-subject statistics; one fixed fine-tuning configuration (deep head, lr 3e-4, focal loss,
+<= 50 epochs; the legacy lr 1e-4 under-trains z-scored inputs, and 3e-4 was chosen among 1e-4 / 3e-4 /
+1e-3 on the validation balanced accuracy of the from-scratch model, see `scripts/finetune.py`);
+best epoch chosen on validation balanced accuracy; test evaluated once per seed;
 probability-based mAP/AUC reported next to the legacy hard-label values.
 
 ## Experiment grid (`scripts/plan.py`)
@@ -89,19 +92,20 @@ legacy corpus had ~40 R). Defaults: 5 seeds, main volume 10 R.
 | volume | `diff_gru_x{1,2,5,10,20,40}` (nested corpora) | R1-05, R3-03, S-18 |
 | scope | `diff_gru_all_x10` (synthetic drink, eat **and** other) | R3-02 |
 | samehand | `scratch`, `real_all`, `diff_gru_x10` on the same-wrist dataset | R2-06, R1-03 |
-| legacy | the archived recipe (raw units, archived pretrained backbone) with 5 seeds | R3-01 |
+| legacy (opt-in) | the archived recipe (raw units, archived pretrained backbone) with 5 seeds; that backbone was pretrained on synthetic data whose generator saw 28 of the 29 test subjects, so its test metrics are contaminated | R3-01 |
 | heads (opt-in) | light / balanced / classic heads on `diff_gru_x10` | R3-02 |
 
-Choose a subset with `slurm/submit_pipeline.sh -- --experiments main controls samehand legacy --seeds 3`.
+Choose a subset with `slurm/submit_pipeline.sh -- --experiments main controls samehand --seeds 3`.
 Other options: `--multipliers`, `--main-multiplier`, `--gen-window 500` (generate whole windows
 instead of 24-step segments), `--pretrain-args "--epochs 10"`, `--finetune-args ...`.
 
-**Compute (rough, from the legacy timings on the original cluster).** Generator training
-~1.1 s/step (100 k steps ≈ 30 GPU-h per generator, 5 generators); sampling ~7 ms per 24-step
-segment (≈ 18 GPU-h for the 40 R drink corpus, split over `--sample-shards` jobs); pretraining
-~0.8 GPU-h per R for 20 epochs (≈ 8 h at 10 R, 31 h at 40 R); fine-tuning 2-3.5 GPU-h per run. The
-full default grid is on the order of 1,000 GPU-hours; `--seeds 3 --multipliers 1 2 5 10 20` roughly
-halves it. Disk: ~8 GB per 10 R corpus (float16), ~15 GB of generator samples per 40 R class.
+**Compute (measured on one NVIDIA H200, TF 2.20 / PyTorch 2.2).** Generator training
+~0.34 s/step (100 k steps ≈ 9.5 GPU-h per generator, 5 generators); sampling ~3.8 ms per 24-step
+segment at batch 4096 (≈ 9.5 GPU-h for the 40 R drink corpus, split over `--sample-shards` jobs);
+pretraining ~2,500 windows/s (20 epochs: ≈ 0.5 h at 10 R, 2 h at 40 R); fine-tuning ~42 s/epoch
+(≤ 35 min per run). The full default grid (5 seeds) is ≈ 150 GPU-hours. On the original cluster
+the same stages were 3-16x slower. Disk: ~1.9 GB per 10 R corpus (float16), ~8 GB of generator
+samples per 40 R class.
 
 ## Reproducing the archived numbers
 

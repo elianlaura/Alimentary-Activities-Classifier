@@ -25,7 +25,9 @@ def main():
     ap.add_argument("--checkpoint", default=None, help="default: latest model_*.pt in --gen-dir")
     ap.add_argument("--n", type=int, required=True, help="number of segments to generate")
     ap.add_argument("--out", required=True)
-    ap.add_argument("--batch-size", type=int, default=512)
+    # Samples are independent of the batch (no batch-dependent layers); on an H200 4096 is
+    # ~1.9x faster per segment than the legacy 512 (3.8 vs 7.1 ms, BiGRU variant).
+    ap.add_argument("--batch-size", type=int, default=4096)
     ap.add_argument("--respacing", default="", help="e.g. 100 (empty = all steps)")
     ap.add_argument("--seed", type=int, default=0)
     args = ap.parse_args()
@@ -34,7 +36,20 @@ def main():
     scaler = MinMaxScaler(cfg["scaler"]["lo"], cfg["scaler"]["hi"])
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     ckpt = args.checkpoint or latest_checkpoint(args.gen_dir)
-    state = torch.load(ckpt, map_location=device)["model_state_dict"]
+    if ckpt is None:
+        raise SystemExit("[sample] no model_*.pt in %s" % args.gen_dir)
+    ck = torch.load(ckpt, map_location=device)
+    if args.checkpoint is None:
+        # Never sample from an interrupted training run (e.g. a job that hit its time limit).
+        done_path = os.path.join(args.gen_dir, "train_done.json")
+        if not os.path.exists(done_path):
+            raise SystemExit("[sample] %s has no train_done.json: generator training did not finish "
+                             "(resubmit stage 2) or pass --checkpoint" % args.gen_dir)
+        steps = int(json.load(open(done_path))["steps"])
+        if int(ck["step"]) != steps:
+            raise SystemExit("[sample] latest checkpoint %s is at step %d, training finished at step %d"
+                             % (ckpt, int(ck["step"]), steps))
+    state = ck["model_state_dict"]
     use_gru = any(".gru." in k for k in state)
     model = build_model(cfg, use_gru=use_gru).to(device)
     model.load_state_dict(state)
@@ -65,7 +80,8 @@ def main():
             save_json(progress_path, {"done": done, "checkpoint": ckpt, "seconds": elapsed + time.time() - t0})
             rate = (time.time() - t0) / max(done, 1)
             print("[sample] %d / %d (%.4f s/segment)" % (done, args.n, rate), flush=True)
-    save_json(args.out.replace(".npy", "") + ".json", {
+    # Completion record: build_corpus.py refuses shards without it.
+    save_json(os.path.splitext(args.out)[0] + ".json", {
         "checkpoint": ckpt, "arch": "gru" if use_gru else "attn", "n": args.n, "window": cfg["window"],
         "respacing": args.respacing or cfg["diffusion_steps"], "seconds_this_run": round(elapsed + time.time() - t0, 1),
         "gpu": torch.cuda.get_device_name(0) if torch.cuda.is_available() else "cpu"})

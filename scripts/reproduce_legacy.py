@@ -50,6 +50,9 @@ def main():
     import tensorflow as tf
     for gpu in tf.config.list_physical_devices("GPU"):
         tf.config.experimental.set_memory_growth(gpu, True)
+    # TF32 (default on Ampere/Hopper GPUs) flips a few borderline windows (2N: 0.8337 vs 0.8338);
+    # full fp32 matches the archived CPU/GPU values.
+    tf.config.experimental.enable_tensor_float_32_execution(False)
     X, meta = io.load_dataset(args.data_dir)
     split = splits.load_split(os.path.join(REPO, "splits", "deo_legacy.json"))
     idx = splits.indices(meta, split, "test")

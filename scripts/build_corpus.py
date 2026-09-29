@@ -17,6 +17,18 @@ import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 from deo import corpora, io, norm, splits  # noqa: E402
+from deo.utils import read_json  # noqa: E402
+
+
+def check_shard(path):
+    """A sampling shard is usable only once sample_deo.py wrote its completion record."""
+    record = os.path.splitext(path)[0] + ".json"
+    if not os.path.exists(record):
+        raise SystemExit("[corpus] %s is incomplete (no %s): sampling did not finish, resubmit stage 3"
+                         % (path, os.path.basename(record)))
+    n, rows = int(read_json(record)["n"]), len(np.load(path, mmap_mode="r"))
+    if n != rows:
+        raise SystemExit("[corpus] %s has %d segments but its record says %d" % (path, rows, n))
 
 
 def main():
@@ -38,7 +50,13 @@ def main():
     generated = {}
     for item in args.generated:
         c, paths = item.split("=", 1)
+        for p in paths.split(","):
+            check_shard(p)
         generated[c] = corpora.ConcatArray(paths.split(","))
+    if args.kind == "diffusion":
+        missing = set(corpora.SCOPES[args.scope]) - set(generated)
+        if missing:
+            raise SystemExit("[corpus] --generated has no samples for %s" % sorted(missing))
     stats = norm.load_stats(os.path.join(args.data_dir, "norm_train.json"))
     manifest = corpora.build(args.kind, args.out_dir, X, meta, split, args.multiplier, scope=args.scope,
                              seed=args.seed, generated=generated, axis_std=np.asarray(stats["std"]))

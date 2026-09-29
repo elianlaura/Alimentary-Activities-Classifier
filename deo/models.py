@@ -110,3 +110,29 @@ def build_scratch_classifier(input_shape=(500, 9), **head_kwargs):
 
 def load_autoencoder(path):
     return tf.keras.models.load_model(path, compile=False)
+
+
+class ScaledAdam(tf.keras.optimizers.Adam):
+    """Adam whose step is multiplied by `multiplier` for `scaled_variables` (discriminative
+    fine-tuning: e.g. the pretrained encoder learns slower than the new head).
+
+    Variables are matched with the optimizer's own key (the tf.Variable id on the TensorFlow
+    backend), so the learning rate schedule (ReduceLROnPlateau) still applies to both groups.
+    """
+
+    def __init__(self, scaled_variables=(), multiplier=1.0, **kwargs):
+        super().__init__(**kwargs)
+        self.multiplier = float(multiplier)
+        self._scaled_keys = {self._var_key(v) for v in scaled_variables}
+        if scaled_variables and not self._scaled_keys:
+            raise ValueError("no variable to scale")
+
+    def update_step(self, gradient, variable, learning_rate):
+        if self._var_key(variable) in self._scaled_keys:
+            learning_rate = learning_rate * self.multiplier
+        return super().update_step(gradient, variable, learning_rate)
+
+    def get_config(self):
+        config = super().get_config()
+        config["multiplier"] = self.multiplier
+        return config

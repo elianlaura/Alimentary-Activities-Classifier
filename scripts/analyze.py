@@ -9,6 +9,9 @@ Outputs (<runs>/analysis/):
                                 - Wilcoxon signed-rank + paired t-test over seeds
                                 - Wilcoxon over the 29 test subjects (seed-averaged per-subject BA)
                                 - subject-cluster bootstrap 95% CI of the BA difference
+  bootstrap_ci.csv / .md      per condition, validation and test: seed-mean balanced accuracy and
+                              per-class recall with a subject-cluster bootstrap 95% percentile CI
+                              (10,000 replicates, models fixed)
   volume_curve.png/.pdf       balanced accuracy vs synthetic volume, mean +- std      (R1-05, R3-03)
   learning_curves.png/.pdf    Fig. 3 redrawn: loss and accuracy on separate axes      (R1-08, R1-04)
   class_balance.csv           windows per class, real training set vs each corpus     (S-19)
@@ -28,6 +31,9 @@ from deo import CLASS_NAMES  # noqa: E402
 from deo.utils import read_json  # noqa: E402
 
 METRICS = ["balanced_accuracy", "f1_macro", "f1_weighted", "mAP_score", "mAP_hard", "kappa"]
+LEGACY_NOTE = ("\n**legacy_recipe_pretrained** is fine-tuned from the archived backbone of the 0.9055 run, whose "
+               "pretraining data came from a generator trained on all 94 subjects (test included): it measures "
+               "the reproducibility of that recipe and is not a valid performance estimate.\n")
 
 
 def collect(runs):
@@ -66,8 +72,8 @@ def fmt_pm(mean, std):
     return "%.4f ± %.4f" % (mean, 0.0 if np.isnan(std) else std)
 
 
-def subject_confusions(run_dir):
-    z = np.load(os.path.join(run_dir, "predictions_test.npz"))
+def subject_confusions(run_dir, part="test"):
+    z = np.load(os.path.join(run_dir, "predictions_%s.npz" % part))
     y, p, s = z["y_true"].astype(int), z["probs"].argmax(1), z["subject"]
     subs = np.unique(s)
     cm = np.zeros((len(subs), 3, 3))
@@ -80,6 +86,70 @@ def subject_confusions(run_dir):
 def ba_from_cm(cm):
     rec = np.diag(cm) / np.maximum(cm.sum(1), 1)
     return rec[cm.sum(1) > 0].mean()
+
+
+def recalls_ba(cm):
+    """cm (..., 3, 3) -> recalls (..., 3), BA (...) over the classes with support, full support flag (...)."""
+    support = cm.sum(-1)
+    rec = np.diagonal(cm, axis1=-2, axis2=-1) / np.maximum(support, 1)
+    has = support > 0
+    return rec, (rec * has).sum(-1) / np.maximum(has.sum(-1), 1), has.all(-1)
+
+
+def bootstrap_intervals(df, n_boot=10000, seed=20251028):
+    """Subject-cluster bootstrap of the seed-mean BA and recalls, validation and test.
+
+    Each replicate draws the subjects of the partition with replacement (the same draw for
+    every seed of the condition), recomputes each seed's confusion matrix from the drawn
+    subjects and averages BA over seeds. Percentile 95% interval; models are fixed, so only
+    the variability due to the sample of subjects is covered.
+    """
+    rows = []
+    for (dataset, cond), g in df.groupby(["dataset", "condition"]):
+        g = g.sort_values("seed")
+        for part in ("val", "test"):
+            cms = [subject_confusions(d, part) for d in g["dir"]]
+            subs = cms[0][0]
+            if any(len(s) != len(subs) or np.any(s != subs) for s, _ in cms):
+                raise ValueError("%s/%s: seeds disagree on the %s subjects" % (dataset, cond, part))
+            C = np.stack([cm for _, cm in cms])  # (seeds, subjects, 3, 3)
+            rng = np.random.default_rng(seed)
+            picks = rng.integers(0, len(subs), (n_boot, len(subs)))
+            W = np.zeros((n_boot, len(subs)))
+            np.add.at(W, (np.arange(n_boot)[:, None], picks), 1)
+            rec_b, ba_b, full_b = recalls_ba(np.einsum("bs,ksij->bkij", W, C))
+            rec_o, ba_o, _ = recalls_ba(C.sum(1))
+            ba_b, rec_b = ba_b.mean(1), rec_b.mean(1)
+            row = {"dataset": dataset, "condition": cond, "partition": part, "n_seeds": len(g),
+                   "n_subjects": len(subs), "n_windows": int(C[0].sum()), "balanced_accuracy": float(ba_o.mean()),
+                   "ci95_low": float(np.percentile(ba_b, 2.5)), "ci95_high": float(np.percentile(ba_b, 97.5)),
+                   "boot_sd": float(ba_b.std(ddof=1)), "replicates": n_boot,
+                   "replicates_missing_a_class": int((~full_b.all(1)).sum())}
+            for k, c in enumerate(CLASS_NAMES):
+                row["recall_" + c] = float(rec_o[:, k].mean())
+                row["recall_%s_ci95_low" % c] = float(np.percentile(rec_b[:, k], 2.5))
+                row["recall_%s_ci95_high" % c] = float(np.percentile(rec_b[:, k], 97.5))
+            rows.append(row)
+    return pd.DataFrame(rows)
+
+
+def bootstrap_markdown(ci):
+    lines = ["# Balanced accuracy with subject-cluster bootstrap 95% CI (percentile, seed mean)\n",
+             "| dataset | condition | seeds | validation BA [95% CI] | test BA [95% CI] | "
+             "test recall drink / eat / other |", "|---|---|---|---|---|---|"]
+    for (dataset, cond), g in ci.groupby(["dataset", "condition"], sort=False):
+        v = g[g.partition == "val"].iloc[0]
+        t = g[g.partition == "test"].iloc[0]
+        lines.append("| %s | %s | %d | %.4f [%.4f, %.4f] | %.4f [%.4f, %.4f] | %s |" % (
+            dataset, cond, t.n_seeds, v.balanced_accuracy, v.ci95_low, v.ci95_high,
+            t.balanced_accuracy, t.ci95_low, t.ci95_high,
+            " / ".join("%.3f" % t["recall_" + c] for c in CLASS_NAMES)))
+    n_val, n_test = ci[ci.partition == "val"].n_subjects.max(), ci[ci.partition == "test"].n_subjects.max()
+    lines.append("\nSubjects are resampled with replacement (%d validation, %d test subjects), %d replicates; "
+                 "the interval covers subject sampling only, not training variability (see the seed std "
+                 "in summary.md). Replicates in which a class has no windows: see bootstrap_ci.csv."
+                 % (n_val, n_test, ci.replicates.max()))
+    return "\n".join(lines) + "\n"
 
 
 def compare(df, a, b, dataset, n_boot=2000, seed=20251028):
@@ -212,6 +282,8 @@ def cost_table(runs):
         rows.append({"stage": "generator training", "name": os.path.basename(os.path.dirname(f)),
                      "seconds": d.get("seconds_this_run"), "params": d.get("n_params"), "hardware": d.get("gpu")})
     for f in glob.glob(os.path.join(runs, "generators", "*", "samples_shard*.json")):
+        if f.endswith(".progress.json"):
+            continue
         d = read_json(f)
         rows.append({"stage": "sampling", "name": os.path.relpath(f, runs), "seconds": d.get("seconds_this_run"),
                      "segments": d.get("n"), "hardware": d.get("gpu")})
@@ -256,15 +328,20 @@ def main():
             fmt_pm(r.val_balanced_accuracy_mean, r.val_balanced_accuracy_std),
             fmt_pm(r.test_f1_macro_mean, r.test_f1_macro_std), fmt_pm(r.test_f1_weighted_mean, r.test_f1_weighted_std),
             fmt_pm(r.test_mAP_score_mean, r.test_mAP_score_std), sens))
-    open(os.path.join(out, "summary.md"), "w").write("\n".join(lines) + "\n")
+    note = LEGACY_NOTE if (df.condition == "legacy_recipe_pretrained").any() else ""
+    open(os.path.join(out, "summary.md"), "w").write("\n".join(lines) + "\n" + note)
 
     pairs = []
     conds = set(df[df.dataset == "deo"].condition)
     main = args.main if args.main in conds else None
+    recipe_re = re.compile(r"^(diff_gru_x[\dp]+)_(ep\d+|enclr[\dp]+|ep\d+_enclr[\dp]+)$")
     for c in sorted(conds):
         if c != "scratch" and "scratch" in conds:
             pairs.append(("deo", c, "scratch"))
-        if main and c not in (main, "scratch") and not c.startswith("legacy"):
+        r = recipe_re.match(c)
+        if r and r.group(1) in conds:
+            pairs.append(("deo", c, r.group(1)))  # recipe ablation vs the same volume with the base recipe
+        elif main and c not in (main, "scratch") and not c.startswith("legacy"):
             pairs.append(("deo", main, c))
     for c in sorted(set(df[df.dataset == "deo_samehand"].condition) - {"scratch"}):
         pairs.append(("deo_samehand", c, "scratch"))
@@ -279,13 +356,21 @@ def main():
             r["wilcoxon_subjects_p"], r["subjects_A_better"], r["n_subjects"], *r["boot_ci95"]))
     lines.append("\nWith n seeds the smallest two-sided Wilcoxon p-value is 2/2^n (0.0625 for 5 seeds); "
                  "the subject-level test and the bootstrap interval are the primary evidence.")
-    open(os.path.join(out, "comparisons.md"), "w").write("\n".join(lines) + "\n")
+    open(os.path.join(out, "comparisons.md"), "w").write("\n".join(lines) + "\n" + note)
+
+    rank = {k: i for i, k in enumerate(zip(summary.dataset, summary.condition))}
+    ci = bootstrap_intervals(df)
+    ci["_rank"] = [rank[k] for k in zip(ci.dataset, ci.condition)]
+    ci = ci.sort_values(["_rank", "partition"], ascending=[True, False]).drop(columns="_rank")
+    ci.to_csv(os.path.join(out, "bootstrap_ci.csv"), index=False)
+    open(os.path.join(out, "bootstrap_ci.md"), "w").write(bootstrap_markdown(ci) + note)
 
     volume_curve(summary, out)
     learning_curves(args.runs, out, ["scratch", args.main])
     class_balance(args.runs, args.data_root).to_csv(os.path.join(out, "class_balance.csv"), index=False)
     cost_table(args.runs).to_csv(os.path.join(out, "cost.csv"), index=False)
     print(open(os.path.join(out, "summary.md")).read())
+    print(open(os.path.join(out, "bootstrap_ci.md")).read())
     print(open(os.path.join(out, "comparisons.md")).read())
 
 

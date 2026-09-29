@@ -8,8 +8,11 @@
     python scripts/finetune.py --data-dir $DATA_ROOT/deo --pretrained none --seed 0 --out-dir $RUNS/finetune/scratch/seed0
 
 Training (legacy settings unless stated): encoder + head ('deep' by default),
-categorical focal loss (gamma 3, alpha = inverse class frequency), Adam lr 1e-4,
+categorical focal loss (gamma 3, alpha = inverse class frequency), Adam lr 3e-4,
 batch 128, <= 50 epochs, ReduceLROnPlateau(val_loss, 0.5, patience 15).
+The legacy lr 1e-4 was tuned for raw sensor units; with z-scored inputs it under-trains in
+50 epochs. 3e-4 was chosen on VALIDATION balanced accuracy of the from-scratch model (seed 0)
+among 1e-4 / 3e-4 / 1e-3 (0.845 / 0.901 / 0.891; raw units with 1e-4: 0.862), 2026-09-26.
 Model selection uses ONLY the validation subjects: the checkpoint with the best
 validation balanced accuracy is kept and training stops after --patience epochs
 without improvement. The test split is evaluated once, after training.
@@ -46,9 +49,12 @@ def main():
     ap.add_argument("--head", default="deep", choices=["balanced", "light", "deep", "classic"])
     ap.add_argument("--activation", default="gelu")
     ap.add_argument("--n-dense", type=int, default=200)
-    ap.add_argument("--lr", type=float, default=1e-4)
+    ap.add_argument("--lr", type=float, default=3e-4, help="legacy recipe: 1e-4 with --norm none")
     ap.add_argument("--epochs", type=int, default=50)
     ap.add_argument("--batch-size", type=int, default=128)
+    ap.add_argument("--encoder-lr-mult", type=float, default=1.0,
+                    help="the encoder's Adam step is multiplied by this factor (discriminative fine-tuning, "
+                         "e.g. 0.33: encoder ~1e-4, head 3e-4); 1 = one learning rate for all layers")
     ap.add_argument("--gamma", type=float, default=3.0)
     ap.add_argument("--patience", type=int, default=20)
     ap.add_argument("--early-stop-monitor", default="val_balanced_accuracy",
@@ -65,7 +71,8 @@ def main():
     os.makedirs(args.out_dir, exist_ok=True)
     import tensorflow as tf
     import keras
-    from deo.models import build_classifier, build_scratch_classifier, encoder_from_autoencoder, load_autoencoder
+    from deo.models import (ScaledAdam, build_autoencoder_s, build_classifier, encoder_from_autoencoder,
+                            load_autoencoder)
     for gpu in tf.config.list_physical_devices("GPU"):
         tf.config.experimental.set_memory_growth(gpu, True)
     set_seed(args.seed, args.deterministic)
@@ -81,12 +88,18 @@ def main():
     alpha = [len(y_tr) / (n_classes * counts[c]) for c in range(n_classes)]
 
     head_kw = dict(head=args.head, activation=args.activation, n_dense=args.n_dense, n_classes=n_classes)
-    if args.pretrained.lower() == "none":
-        model = build_scratch_classifier(x_tr.shape[1:], **head_kw)
+    if args.pretrained.lower() == "none":  # same calls as build_scratch_classifier
+        encoder = encoder_from_autoencoder(build_autoencoder_s(x_tr.shape[1:]))
     else:
-        model = build_classifier(encoder_from_autoencoder(load_autoencoder(args.pretrained)), **head_kw)
+        encoder = encoder_from_autoencoder(load_autoencoder(args.pretrained))
+    model = build_classifier(encoder, **head_kw)
+    if args.encoder_lr_mult != 1.0:
+        optimizer = ScaledAdam(scaled_variables=encoder.trainable_variables, multiplier=args.encoder_lr_mult,
+                               learning_rate=args.lr)
+    else:
+        optimizer = keras.optimizers.Adam(learning_rate=args.lr)
     model.compile(loss=keras.losses.CategoricalFocalCrossentropy(gamma=args.gamma, alpha=alpha),
-                  optimizer=keras.optimizers.Adam(learning_rate=args.lr), metrics=["accuracy"])
+                  optimizer=optimizer, metrics=["accuracy"])
 
     class ValBalancedAccuracy(keras.callbacks.Callback):
         def on_epoch_end(self, epoch, logs=None):
@@ -107,6 +120,8 @@ def main():
         hist = model.fit(x_tr, np.eye(n_classes)[y_tr], validation_data=(x_va, np.eye(n_classes)[y_va]),
                          batch_size=args.batch_size, epochs=args.epochs, callbacks=callbacks, verbose=2)
     best = keras.models.load_model(best_path, compile=False)
+    if args.encoder_lr_mult != 1.0:
+        best.save(best_path)  # drop the ScaledAdam compile config so any tool can load the model
     results = {}
     for part, (x, y, subj) in data.items():
         with timer("predict_" + part):

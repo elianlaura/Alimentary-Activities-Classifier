@@ -67,6 +67,28 @@ def per_subject_balanced_accuracy(y_true, y_pred, subjects):
     return out
 
 
+def subject_bootstrap(y_true, y_pred, subjects, n_boot=10000, seed=20251028, n_classes=3):
+    """Percentile 95% CI of balanced accuracy and recalls, resampling whole subjects (model fixed)."""
+    y_true, y_pred = np.asarray(y_true, dtype=int), np.asarray(y_pred, dtype=int)
+    subs, inv = np.unique(np.asarray(subjects).astype(str), return_inverse=True)
+    cm = np.zeros((len(subs), n_classes, n_classes))
+    np.add.at(cm, (inv, y_true, y_pred), 1)
+    rng = np.random.default_rng(seed)
+    picks = rng.integers(0, len(subs), (n_boot, len(subs)))
+    weights = np.zeros((n_boot, len(subs)))
+    np.add.at(weights, (np.arange(n_boot)[:, None], picks), 1)
+    boot = np.einsum("bs,sij->bij", weights, cm)
+    support = boot.sum(-1)
+    rec = np.diagonal(boot, axis1=-2, axis2=-1) / np.maximum(support, 1)
+    has = support > 0
+    ba = (rec * has).sum(-1) / np.maximum(has.sum(-1), 1)
+    pct = lambda v: [float(np.percentile(v, 2.5)), float(np.percentile(v, 97.5))]
+    return {"n_subjects": int(len(subs)), "replicates": int(n_boot), "seed": seed,
+            "balanced_accuracy_ci95": pct(ba), "balanced_accuracy_boot_sd": float(ba.std(ddof=1)),
+            "recall_ci95": {CLASS_NAMES[k]: pct(rec[:, k]) for k in range(n_classes)},
+            "replicates_missing_a_class": int((~has.all(-1)).sum())}
+
+
 def format_legacy(m):
     """Text block in the layout of the legacy metrics_test_*.txt files."""
     r4 = lambda v: [round(float(x), 4) for x in v]

@@ -10,6 +10,7 @@ batch 256, 20 epochs (legacy settings). The labels of the corpus are not used.
 Normalisation (--norm):
   train   z-score with the real TRAINING-subject statistics (corrected protocol)
   corpus  z-score with the corpus' own statistics (legacy behaviour)
+  none    raw sensor units (same scale as finetune.py --norm none)
 """
 import argparse
 import os
@@ -31,7 +32,7 @@ def main():
     ap.add_argument("--epochs", type=int, default=20)
     ap.add_argument("--batch-size", type=int, default=256)
     ap.add_argument("--lr", type=float, default=1e-4)
-    ap.add_argument("--norm", choices=["train", "corpus"], default="train")
+    ap.add_argument("--norm", choices=["train", "corpus", "none"], default="train")
     ap.add_argument("--output", choices=["linear", "sigmoid"], default="linear")
     ap.add_argument("--max-windows", type=int, default=0, help="debug: use only the first N corpus windows")
     ap.add_argument("--deterministic", action="store_true")
@@ -55,9 +56,11 @@ def main():
         corpus = corpus[: args.max_windows]
     if args.norm == "train":
         stats = norm.load_stats(os.path.join(args.data_dir, "norm_train.json"))
-    else:
+    elif args.norm == "corpus":
         stats = norm.fit_stats(corpus)
-    write_json(os.path.join(args.out_dir, "norm_used.json"), stats)
+    else:
+        stats = None  # norm.apply(x, None) returns the raw float32 values
+    write_json(os.path.join(args.out_dir, "norm_used.json"), stats or {"norm": "none"})
 
     # Diagnostic: reconstruction error on real windows of the VALIDATION subjects.
     X, meta = io.load_dataset(args.data_dir)

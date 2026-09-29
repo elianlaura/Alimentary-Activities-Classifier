@@ -13,9 +13,19 @@ Experiments (ids refer to docs/REVIEW_RESPONSE.md):
   scope       diffusion for all three classes instead of minority only      R3-02
   heads       the four classification heads on the main diffusion corpus    R3-02 (optional)
   samehand    scratch / real SSL / diffusion on the same-wrist dataset      R2-06, R1-03
-  legacy      the exact legacy recipe (raw units, legacy pretrained AE)     R3-01
+  legacy      the exact legacy recipe (raw units, legacy pretrained AE)     R3-01 (opt-in)
+  recipe      training-recipe ablation on diff_gru_x{--recipe-multipliers} (opt-in): pretraining
+              for --recipe-pretrain-epochs instead of 20 (_ep40) and/or discriminative fine-tuning
+              with the encoder's step x --recipe-encoder-lr-mult (_enclr0p33), 2x2 with the base
+              condition. Its tasks are appended at the end of the task files.
+
+'legacy' is not in the default list: its pretrained backbone (artifacts/legacy/
+pretrained_ae_20251012) was trained on synthetic data from a generator that saw 28 of
+the 29 test subjects, so its test numbers are contaminated. It only measures the
+seed-to-seed variance of the archived recipe.
 """
 import argparse
+import glob
 import math
 import os
 import sys
@@ -46,19 +56,45 @@ def main():
     ap.add_argument("--sample-args", default="", help="extra arguments for pad_ts/sample_deo.py")
     ap.add_argument("--pretrain-args", default="", help="extra arguments for scripts/pretrain.py, e.g. '--epochs 5'")
     ap.add_argument("--finetune-args", default="", help="extra arguments for scripts/finetune.py")
+    ap.add_argument("--norm", choices=["train", "none", "mixed"], default="train",
+                    help="input scale of both stages: train = z-score with training-subject stats in "
+                         "pretraining and fine-tuning; none = raw sensor units in both; mixed = z-scored "
+                         "pretraining, raw fine-tuning (the arrangement of the archived runs). "
+                         "The 'legacy' experiment always fine-tunes in raw units.")
     ap.add_argument("--experiments", nargs="+",
-                    default=["main", "controls", "volume", "scope", "samehand", "legacy"],
-                    help="add 'heads' for the head ablation")
+                    default=["main", "controls", "volume", "scope", "samehand"],
+                    choices=["main", "controls", "volume", "scope", "heads", "samehand", "legacy", "recipe"],
+                    help="add 'heads' for the head ablation; 'legacy' uses the leaked archived backbone")
+    ap.add_argument("--recipe-multipliers", type=float, nargs="+", default=[10, 20, 40])
+    ap.add_argument("--recipe-pretrain-epochs", type=int, default=40)
+    ap.add_argument("--recipe-encoder-lr-mult", type=float, default=0.33)
     args = ap.parse_args()
 
     deo_dir = os.path.join(args.data_root, "deo")
     sh_dir = os.path.join(args.data_root, "deo_samehand")
     R = read_json(os.path.join(deo_dir, "volume_unit.json"))["R_minority_train_windows"]
     exps = set(args.experiments)
+    if "legacy" in exps:
+        print("[plan] WARNING: 'legacy' fine-tunes the archived backbone, pretrained on synthetic data "
+              "whose generator saw test subjects; do not report its test metrics as results")
     if "samehand" in exps and not os.path.exists(os.path.join(sh_dir, "meta.csv")):
         print("[plan] %s not prepared: dropping the samehand experiment" % sh_dir)
         exps.discard("samehand")
     runs = os.path.abspath(args.runs)
+    pre_norm = {"train": "train", "none": "none", "mixed": "train"}[args.norm]
+    ft_norm = {"train": "train", "none": "none", "mixed": "none"}[args.norm]
+    signature = {"pretrain": [pre_norm, args.pretrain_args.strip()], "finetune": [ft_norm, args.finetune_args.strip()]}
+    previous = os.path.join(runs, "plan", "plan.json")
+    if os.path.exists(previous):
+        # Finished tasks are skipped (done.json), so changing the settings of a stage that already
+        # has results would silently mix runs with different settings. Stages 1-4 do not depend on them.
+        old = read_json(previous).get("signature", {})
+        for stage in ("pretrain", "finetune"):
+            done = glob.glob(os.path.join(runs, stage, "*", "seed*", "done.json")) + \
+                glob.glob(os.path.join(runs, stage, "*", "*", "seed*", "done.json"))
+            if done and stage in old and old[stage] != signature[stage]:
+                raise SystemExit("[plan] %s/%s has results made with %s, now requested %s: use another --runs "
+                                 "directory (or move the old results away)" % (runs, stage, old[stage], signature[stage]))
     seeds = list(range(args.seeds))
     M = args.main_multiplier
     k = math.ceil(500 / args.gen_window)
@@ -81,6 +117,12 @@ def main():
         corpora["diff_gru_all_x" + fmt_mult(M)] = ("diffusion", M, "all", "gru")
     if "samehand" in exps:
         corpora.setdefault("real_all", ("real", 0, "all", None))
+    if "recipe" in exps:
+        for m in args.recipe_multipliers:
+            corpora.setdefault("diff_gru_x" + fmt_mult(m), ("diffusion", m, "minority", "gru"))
+    ep_tag = "_ep%d" % args.recipe_pretrain_epochs
+    lr_tag = "_enclr" + fmt_mult(args.recipe_encoder_lr_mult)
+    recipe_bases = ["diff_gru_x" + fmt_mult(m) for m in args.recipe_multipliers] if "recipe" in exps else []
 
     # ------------------------------------------------ generators and sampling
     need = {}  # (arch, class) -> segments
@@ -126,17 +168,25 @@ def main():
     pre_tasks = []
     for name in sorted(corpora):
         for s in seeds:
-            pre_tasks.append("tf\t%s %s/scripts/pretrain.py --data-dir %s --corpus %s --seed %d --out-dir %s %s" % (
+            pre_tasks.append("tf\t%s %s/scripts/pretrain.py --data-dir %s --corpus %s --seed %d --out-dir %s --norm %s %s" % (
                 py, REPO, deo_dir, os.path.join(runs, "corpora", name), s,
-                os.path.join(runs, "pretrain", name, "seed%d" % s), args.pretrain_args))
+                os.path.join(runs, "pretrain", name, "seed%d" % s), pre_norm, args.pretrain_args))
+    for base in recipe_bases:  # longer pretraining; --epochs last so it wins over --pretrain-args
+        for s in seeds:
+            pre_tasks.append("tf\t%s %s/scripts/pretrain.py --data-dir %s --corpus %s --seed %d --out-dir %s --norm %s %s --epochs %d" % (
+                py, REPO, deo_dir, os.path.join(runs, "corpora", base), s,
+                os.path.join(runs, "pretrain", base + ep_tag, "seed%d" % s), pre_norm, args.pretrain_args,
+                args.recipe_pretrain_epochs))
 
     # ------------------------------------------------------------ fine-tuning
     ft_tasks = []
 
     def ft(dataset_dir, dataset, cond, pretrained, seed, extra=""):
         out = os.path.join(runs, "finetune", dataset, cond, "seed%d" % seed)
-        ft_tasks.append("tf\t%s %s/scripts/finetune.py --data-dir %s --pretrained %s --seed %d --out-dir %s %s %s" % (
-            py, REPO, dataset_dir, pretrained, seed, out, extra, args.finetune_args))
+        # argparse keeps the last value: 'extra' (per-condition settings such as the fixed legacy
+        # recipe or --head) overrides both --norm and --finetune-args
+        ft_tasks.append("tf\t%s %s/scripts/finetune.py --data-dir %s --pretrained %s --seed %d --out-dir %s --norm %s %s %s" % (
+            py, REPO, dataset_dir, pretrained, seed, out, ft_norm, args.finetune_args, extra))
 
     ae = lambda name, s: os.path.join(runs, "pretrain", name, "seed%d" % s, "autoencoder.keras")
     for s in seeds:
@@ -154,21 +204,33 @@ def main():
         if "legacy" in exps:
             legacy_ae = os.path.join(REPO, "artifacts", "legacy", "pretrained_ae_20251012",
                                      "best_model_de_fake_padts_94u_20251012-101512.keras")
-            legacy_kw = "--norm none --early-stop-monitor val_accuracy"
+            legacy_kw = "--norm none --lr 1e-4 --early-stop-monitor val_accuracy"
             ft(deo_dir, "deo", "legacy_recipe_pretrained", legacy_ae, s, legacy_kw)
             ft(deo_dir, "deo", "legacy_recipe_scratch", "none", s, legacy_kw)
+    enc_kw = "--encoder-lr-mult %g" % args.recipe_encoder_lr_mult
+    for s in seeds:  # recipe ablation, appended so earlier task indices do not move
+        for base in recipe_bases:
+            ft(deo_dir, "deo", base + ep_tag, ae(base + ep_tag, s), s)
+            ft(deo_dir, "deo", base + lr_tag, ae(base, s), s, enc_kw)
+            ft(deo_dir, "deo", base + ep_tag + lr_tag, ae(base + ep_tag, s), s, enc_kw)
 
     plan_dir = os.path.join(runs, "plan")
     os.makedirs(plan_dir, exist_ok=True)
     stages = [("01_gen_data", gen_data), ("02_gen_train", gen_train), ("03_gen_sample", gen_sample),
               ("04_corpora", corpus_tasks), ("05_pretrain", pre_tasks), ("06_finetune", ft_tasks)]
     for stage, tasks in stages:
-        with open(os.path.join(plan_dir, stage + ".tsv"), "w") as fh:
+        # atomic replace: array tasks that are already queued read their line from this file
+        path = os.path.join(plan_dir, stage + ".tsv")
+        with open(path + ".tmp", "w") as fh:
             fh.write("\n".join(tasks) + ("\n" if tasks else ""))
+        os.replace(path + ".tmp", path)
         print("[plan] %-14s %4d tasks" % (stage, len(tasks)))
     write_json(os.path.join(plan_dir, "plan.json"), {
-        "R": R, "seeds": seeds, "main_multiplier": M, "multipliers": args.multipliers,
+        "R": R, "seeds": seeds, "norm": args.norm, "signature": signature,
+        "main_multiplier": M, "multipliers": args.multipliers,
         "gen_window": args.gen_window, "segments_per_window": k, "experiments": sorted(exps),
+        "recipe": {"bases": recipe_bases, "pretrain_epochs": args.recipe_pretrain_epochs,
+                   "encoder_lr_mult": args.recipe_encoder_lr_mult} if recipe_bases else None,
         "corpora": {n: {"kind": v[0], "multiplier": v[1], "scope": v[2], "arch": v[3],
                         "windows": (v[1] * R if v[0] != "real" else None)} for n, v in corpora.items()},
         "segments_to_sample": {"%s_%s" % a: n for a, n in need.items()}})
