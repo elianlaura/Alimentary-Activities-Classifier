@@ -14,6 +14,8 @@ Experiments (ids refer to docs/REVIEW_RESPONSE.md):
   heads       the four classification heads on the main diffusion corpus    R3-02 (optional)
   samehand    scratch / real SSL / diffusion on the same-wrist dataset      R2-06, R1-03
   legacy      the exact legacy recipe (raw units, legacy pretrained AE)     R3-01 (opt-in)
+  pooled      diffusion (BiGRU) with ONE generator trained on drink + eat together (as the
+              archived run) at --pooled-multipliers, vs the per-class generators (opt-in)
   recipe      training-recipe ablation on diff_gru_x{--recipe-multipliers} (opt-in): pretraining
               for --recipe-pretrain-epochs instead of 20 (_ep40) and/or discriminative fine-tuning
               with the encoder's step x --recipe-encoder-lr-mult (_enclr0p33), 2x2 with the base
@@ -31,6 +33,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+from deo.corpora import SCOPES  # noqa: E402
 from deo.utils import read_json, write_json  # noqa: E402
 
 REPO = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
@@ -63,8 +66,10 @@ def main():
                          "The 'legacy' experiment always fine-tunes in raw units.")
     ap.add_argument("--experiments", nargs="+",
                     default=["main", "controls", "volume", "scope", "samehand"],
-                    choices=["main", "controls", "volume", "scope", "heads", "samehand", "legacy", "recipe"],
+                    choices=["main", "controls", "volume", "scope", "heads", "samehand", "legacy", "recipe", "pooled"],
                     help="add 'heads' for the head ablation; 'legacy' uses the leaked archived backbone")
+    ap.add_argument("--pooled-multipliers", type=float, nargs="+", default=[0.5, 1, 2],
+                    help="volumes of the 'pooled' experiment (one BiGRU generator for drink + eat)")
     ap.add_argument("--recipe-multipliers", type=float, nargs="+", default=[10, 20, 40])
     ap.add_argument("--recipe-pretrain-epochs", type=int, default=40)
     ap.add_argument("--recipe-encoder-lr-mult", type=float, default=0.33)
@@ -117,6 +122,9 @@ def main():
         corpora["diff_gru_all_x" + fmt_mult(M)] = ("diffusion", M, "all", "gru")
     if "samehand" in exps:
         corpora.setdefault("real_all", ("real", 0, "all", None))
+    if "pooled" in exps:
+        for m in args.pooled_multipliers:
+            corpora["diff_gru_pooled_x" + fmt_mult(m)] = ("diffusion", m, "pooled", "gru")
     if "recipe" in exps:
         for m in args.recipe_multipliers:
             corpora.setdefault("diff_gru_x" + fmt_mult(m), ("diffusion", m, "minority", "gru"))
@@ -129,7 +137,7 @@ def main():
     for name, (kind, m, scope, arch) in corpora.items():
         if kind != "diffusion":
             continue
-        classes = ["drink", "eat"] if scope == "minority" else ["drink", "eat", "other"]
+        classes = SCOPES[scope]
         per_class = math.ceil(m * R / len(classes)) + 1
         for c in classes:
             need[(arch, c)] = max(need.get((arch, c), 0), per_class * k)
@@ -160,7 +168,7 @@ def main():
         if kind != "real":
             cmd += " --multiplier %g" % m
         if kind == "diffusion":
-            classes = ["drink", "eat"] if scope == "minority" else ["drink", "eat", "other"]
+            classes = SCOPES[scope]
             cmd += " --generated " + " ".join("%s=%s" % (c, samples[(arch, c)]) for c in classes)
         corpus_tasks.append("tf\t" + cmd)
 

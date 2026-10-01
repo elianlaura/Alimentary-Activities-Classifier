@@ -23,6 +23,9 @@ surrogate   multivariate phase-randomised surrogates of real training windows:
             cross-spectrum but destroy the temporal structure.                  (R1-06c)
 real        the real training windows themselves, no extra volume (unlabelled
             self-supervised pretraining on real data only).
+
+Scope 'pooled' (diffusion only): one generator trained on drink and eat segments together,
+as in the archived 0.9055 run; its windows have no class (label -1).
 """
 import math
 import os
@@ -34,7 +37,9 @@ from .io import take
 from .utils import write_json
 
 CLASS_IDS = {"drink": 0, "eat": 1, "other": 2}
-SCOPES = {"minority": ["drink", "eat"], "all": ["drink", "eat", "other"]}
+SCOPES = {"minority": ["drink", "eat"], "all": ["drink", "eat", "other"],
+          "pooled": ["drinkeat"]}  # one generator trained on drink + eat together; label -1
+POOLED = {"drinkeat": ["drink", "eat"]}
 
 
 def class_train_indices(meta, split):
@@ -176,7 +181,7 @@ def build(kind, out_dir, X, meta, split, multiplier, scope="minority", seed=0,
                 else:
                     raise ValueError("unknown corpus kind %r" % kind)
             corpus[pos:pos + m] = np.clip(block, -6e4, 6e4).astype(np.float16)
-            labels[pos:pos + m] = CLASS_IDS[c]
+            labels[pos:pos + m] = CLASS_IDS.get(c, -1)
             pos += m
     corpus.flush()
     np.save(os.path.join(out_dir, "labels.npy"), labels)

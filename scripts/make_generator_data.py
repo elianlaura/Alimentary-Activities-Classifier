@@ -24,7 +24,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 from deo import N_TIMESTEPS, io, splits  # noqa: E402
-from deo.corpora import class_train_indices  # noqa: E402
+from deo.corpora import POOLED, class_train_indices  # noqa: E402
 from deo.utils import write_json  # noqa: E402
 
 
@@ -32,7 +32,8 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--data-dir", required=True, help="converted dataset dir (contains X.npy, split.json)")
     ap.add_argument("--out-dir", default=None, help="default: <data-dir>/generator")
-    ap.add_argument("--classes", nargs="+", default=["drink", "eat", "other"])
+    ap.add_argument("--classes", nargs="+", default=["drink", "eat", "other"],
+                    help="drink, eat, other, or drinkeat (drink + eat pooled for a single generator)")
     ap.add_argument("--window", type=int, default=24)
     ap.add_argument("--stride", type=int, default=12)
     ap.add_argument("--max-segments", type=int, default=0, help="random cap per class (0 = no cap)")
@@ -48,6 +49,8 @@ def main():
     X, meta = io.load_dataset(args.data_dir)
     split = splits.load_split(os.path.join(args.data_dir, "split.json"))
     idx = class_train_indices(meta, split)
+    for name, parts in POOLED.items():  # e.g. drinkeat: one generator for drink + eat
+        idx[name] = np.sort(np.concatenate([idx[p] for p in parts]))
     held_out = set(split["val"]) | set(split["test"])
     starts = np.arange(0, N_TIMESTEPS - args.window + 1, args.stride)
     rng = np.random.default_rng(args.seed)

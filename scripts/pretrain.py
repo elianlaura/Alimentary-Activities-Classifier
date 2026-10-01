@@ -11,6 +11,11 @@ Normalisation (--norm):
   train   z-score with the real TRAINING-subject statistics (corrected protocol)
   corpus  z-score with the corpus' own statistics (legacy behaviour)
   none    raw sensor units (same scale as finetune.py --norm none)
+
+Early stopping (--early-stop-patience N, off by default): --epochs becomes the maximum; training
+stops after N epochs without a lower reconstruction MSE on the real validation windows, and the
+weights of the best epoch are saved. With --norm corpus a few implausible validation windows
+(|acc| ~ 1e3 m/s^2) dominate that MSE; --val-max-abs-acc drops them from the monitor.
 """
 import argparse
 import os
@@ -34,6 +39,12 @@ def main():
     ap.add_argument("--lr", type=float, default=1e-4)
     ap.add_argument("--norm", choices=["train", "corpus", "none"], default="train")
     ap.add_argument("--output", choices=["linear", "sigmoid"], default="linear")
+    ap.add_argument("--early-stop-patience", type=int, default=0,
+                    help="stop after N epochs without improvement of the real-validation MSE and keep the "
+                         "best epoch (0 = off: train exactly --epochs and keep the last epoch)")
+    ap.add_argument("--val-max-abs-acc", type=float, default=0,
+                    help="drop validation windows with any |acc| above this value (m/s^2) from the "
+                         "reconstruction monitor (0 = keep all; 156.96 = 16 g, as make_generator_data.py)")
     ap.add_argument("--max-windows", type=int, default=0, help="debug: use only the first N corpus windows")
     ap.add_argument("--deterministic", action="store_true")
     args = ap.parse_args()
@@ -66,6 +77,13 @@ def main():
     X, meta = io.load_dataset(args.data_dir)
     split = splits.load_split(os.path.join(args.data_dir, "split.json"))
     val_idx = splits.indices(meta, split, "val")
+    n_val_dropped = 0
+    if args.val_max_abs_acc:
+        ok = np.abs(io.take(X, val_idx)[:, :, :3]).max(axis=(1, 2)) <= args.val_max_abs_acc
+        n_val_dropped = int((~ok).sum())
+        val_idx = val_idx[ok]
+        print("[pretrain] %d validation windows with |acc| > %g dropped from the monitor"
+              % (n_val_dropped, args.val_max_abs_acc), flush=True)
     rng = np.random.default_rng(args.seed)
     val_idx = np.sort(rng.choice(val_idx, min(5000, len(val_idx)), replace=False))
     x_val = norm.apply(io.take(X, val_idx), stats)
@@ -90,18 +108,31 @@ def main():
 
     ae = build_autoencoder_s() if args.output == "linear" else build_autoencoder_legacy()
     ae.compile(optimizer=keras.optimizers.RMSprop(learning_rate=args.lr), loss="mse")
-    csv_log = keras.callbacks.CSVLogger(os.path.join(args.out_dir, "history.csv"))
+    callbacks = [keras.callbacks.CSVLogger(os.path.join(args.out_dir, "history.csv"))]
+    early = None
+    if args.early_stop_patience:
+        # Keras 3 restores the best weights at the end of fit, also when --epochs is reached first
+        early = keras.callbacks.EarlyStopping(monitor="val_loss", patience=args.early_stop_patience,
+                                              restore_best_weights=True, verbose=1)
+        callbacks.append(early)
     with timer("pretrain_fit"):
         hist = ae.fit(CorpusSequence(corpus, args.batch_size, args.seed), epochs=args.epochs,
-                      validation_data=(x_val, x_val), callbacks=[csv_log], verbose=2)
+                      validation_data=(x_val, x_val), callbacks=callbacks, verbose=2)
     path = os.path.join(args.out_dir, "autoencoder.keras")
     ae.save(path)
+    epochs_run = len(hist.history["loss"])
+    sel = early.best_epoch if early is not None else epochs_run - 1  # 0-based epoch of the saved weights
     write_json(done_flag, {
         "autoencoder": path, "corpus": os.path.abspath(args.corpus), "n_windows": int(len(corpus)),
         "epochs": args.epochs, "batch_size": args.batch_size, "lr": args.lr, "norm": args.norm,
         "output": args.output, "seed": args.seed, "n_params": int(ae.count_params()),
+        "early_stop_patience": args.early_stop_patience, "epochs_run": epochs_run,
+        "selected_epoch": sel + 1, "val_max_abs_acc": args.val_max_abs_acc,
+        "val_windows_dropped": n_val_dropped, "n_val_monitor_windows": int(len(val_idx)),
         "final_train_mse": float(hist.history["loss"][-1]),
         "final_real_val_mse": float(hist.history["val_loss"][-1]),
+        "selected_train_mse": float(hist.history["loss"][sel]),
+        "selected_real_val_mse": float(hist.history["val_loss"][sel]),
         "timing_s": timer.stages, "environment": environment_info()})
     print("[pretrain] saved %s" % path, flush=True)
 

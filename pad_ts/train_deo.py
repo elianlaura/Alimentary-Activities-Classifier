@@ -44,6 +44,12 @@ def main():
     args = ap.parse_args()
 
     os.makedirs(args.out_dir, exist_ok=True)
+    done_path = os.path.join(args.out_dir, "train_done.json")
+    if os.path.exists(done_path):
+        import json
+        if int(json.load(open(done_path))["steps"]) >= args.steps:
+            print("[train] %s already trained (train_done.json), skipping" % args.out_dir, flush=True)
+            return
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

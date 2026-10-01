@@ -198,6 +198,12 @@ def volume_curve(summary, out_dir, dataset="deo"):
     fig, ax = plt.subplots(figsize=(5, 3.4))
     for col, label, mk in (("test_balanced_accuracy", "test", "o"), ("val_balanced_accuracy", "validation", "s")):
         ax.errorbar(s["mult"], s[col + "_mean"], yerr=s[col + "_std"], marker=mk, capsize=3, label=label)
+    pool = summary[(summary.dataset == dataset) & summary.condition.str.match(r"^diff_gru_pooled_x[\dp]+$")].copy()
+    if not pool.empty:
+        pool["mult"] = pool.condition.str.replace("diff_gru_pooled_x", "").str.replace("p", ".").astype(float)
+        pool = pool.sort_values("mult")
+        ax.errorbar(pool["mult"], pool["test_balanced_accuracy_mean"], yerr=pool["test_balanced_accuracy_std"],
+                    marker="^", capsize=3, ls="--", label="test, one generator for drink + eat")
     base = summary[(summary.dataset == dataset) & (summary.condition == "scratch")]
     if not base.empty:
         m, sd = base["test_balanced_accuracy_mean"].iloc[0], base["test_balanced_accuracy_std"].iloc[0]
@@ -266,10 +272,13 @@ def class_balance(runs, data_root):
         m = read_json(man)
         pc = m["per_class"]
         rows.append({"set": "corpus " + os.path.basename(os.path.dirname(man)),
-                     "DRINK": pc.get("drink", 0), "EAT": pc.get("eat", 0), "OTHER": pc.get("other", 0)})
+                     "DRINK": pc.get("drink", 0), "EAT": pc.get("eat", 0), "OTHER": pc.get("other", 0),
+                     "DRINK_EAT_POOLED": pc.get("drinkeat", 0) + pc.get("unlabelled", 0)})
     df = pd.DataFrame(rows)
     if not df.empty:
-        tot = df[CLASS_NAMES].sum(1)
+        df["DRINK_EAT_POOLED"] = df.get("DRINK_EAT_POOLED", 0)
+        df["DRINK_EAT_POOLED"] = df["DRINK_EAT_POOLED"].fillna(0).astype(int)
+        tot = df[CLASS_NAMES + ["DRINK_EAT_POOLED"]].sum(1)
         for c in CLASS_NAMES:
             df[c + "_%"] = (100 * df[c] / tot).round(2)
     return df
@@ -339,7 +348,10 @@ def main():
         if c != "scratch" and "scratch" in conds:
             pairs.append(("deo", c, "scratch"))
         r = recipe_re.match(c)
-        if r and r.group(1) in conds:
+        pooled = re.match(r"^diff_gru_pooled_x([\dp]+)$", c)
+        if pooled and "diff_gru_x" + pooled.group(1) in conds:
+            pairs.append(("deo", c, "diff_gru_x" + pooled.group(1)))  # one generator vs one per class
+        elif r and r.group(1) in conds:
             pairs.append(("deo", c, r.group(1)))  # recipe ablation vs the same volume with the base recipe
         elif main and c not in (main, "scratch") and not c.startswith("legacy"):
             pairs.append(("deo", main, c))
