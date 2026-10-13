@@ -142,7 +142,7 @@ def stitch(segments, n_windows, offset=0):
 
 
 def build(kind, out_dir, X, meta, split, multiplier, scope="minority", seed=0,
-          generated=None, axis_std=None, chunk=5000):
+          generated=None, axis_std=None, chunk=5000, class_counts=None):
     """Write corpus.npy (float16), labels.npy (int8) and manifest.json into out_dir."""
     os.makedirs(out_dir, exist_ok=True)
     rng = np.random.default_rng(seed)
@@ -150,9 +150,23 @@ def build(kind, out_dir, X, meta, split, multiplier, scope="minority", seed=0,
     idx = class_train_indices(meta, split)
     classes = SCOPES[scope]
     if kind == "real":
+        if class_counts is not None:
+            raise ValueError("class_counts is not valid for a real corpus")
         sources = np.concatenate([idx[c] for c in classes])
         counts = {c: int(len(idx[c])) for c in classes}
         total = len(sources)
+    elif class_counts is not None:
+        if kind != "diffusion":
+            raise ValueError("class_counts is only supported for diffusion corpora")
+        missing = set(classes) - set(class_counts)
+        extra = set(class_counts) - set(classes)
+        if missing or extra:
+            raise ValueError("class_counts keys do not match scope: missing=%s extra=%s"
+                             % (sorted(missing), sorted(extra)))
+        counts = {c: int(class_counts[c]) for c in classes}
+        if any(n < 1 for n in counts.values()):
+            raise ValueError("every explicit class count must be positive: %s" % counts)
+        total = sum(counts.values())
     else:
         total = int(round(multiplier * R))
         counts = allocate(total, classes)
@@ -185,7 +199,12 @@ def build(kind, out_dir, X, meta, split, multiplier, scope="minority", seed=0,
             pos += m
     corpus.flush()
     np.save(os.path.join(out_dir, "labels.npy"), labels)
-    manifest = {"kind": kind, "scope": scope, "multiplier": multiplier, "volume_unit_R": R,
+    effective_multiplier = float(total / R)
+    manifest = {"kind": kind, "scope": scope,
+                "multiplier": effective_multiplier if class_counts is not None else multiplier,
+                "requested_multiplier": multiplier,
+                "effective_multiplier": effective_multiplier,
+                "explicit_class_counts": class_counts is not None, "volume_unit_R": R,
                 "n_windows": int(total), "per_class": counts, "seed": seed,
                 "real_train_windows_per_class": {c: int(len(v)) for c, v in idx.items()}}
     write_json(os.path.join(out_dir, "manifest.json"), manifest)

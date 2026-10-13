@@ -1,0 +1,674 @@
+{
+  "data_dir": "/mnt/beegfs/home/elian.riveros/deo_data/deo_dedup",
+  "data_info": {
+    "source_csv": "/mnt/beegfs/home/elian.riveros/deo_data/raw/fullraws3_vivabem012_drink0eat1another2_94u_nowspr_noaer_acc_gyr_mag__coord__5sec_100hz.csv",
+    "source_bytes": 10283827366,
+    "source_sha256": "2fb9f4d045ad841b684730bdaeafb7354748275c9da39bc048ecfb23ef5aa6e6",
+    "labeler": "deo",
+    "n_windows": 157279,
+    "n_subjects": 94,
+    "nonfinite_values_set_to_zero": 0,
+    "class_counts": {
+      "DRINK": 10945,
+      "EAT": 11426,
+      "OTHER": 134908
+    },
+    "hand_by_class": {
+      "DRINK": [
+        {
+          "hand": "R",
+          "dominance": "D",
+          "n": 17138
+        }
+      ],
+      "EAT": [
+        {
+          "hand": "R",
+          "dominance": "D",
+          "n": 17992
+        }
+      ],
+      "OTHER": [
+        {
+          "hand": "L",
+          "dominance": "ND",
+          "n": 175281
+        },
+        {
+          "hand": "unknown",
+          "dominance": "unknown",
+          "n": 35918
+        }
+      ]
+    },
+    "seconds": 109.5,
+    "deduplicated_from": "/mnt/beegfs/home/elian.riveros/deo_data/deo",
+    "n_windows_before": 246329,
+    "duplicates_removed": 89050,
+    "same_timestamp_different_values_kept": 48
+  },
+  "seed": 42,
+  "n_train_subjects": 55,
+  "sample_rate_hz": 100,
+  "duration_seconds": 30,
+  "real_first": true,
+  "real_reconstruction": "Six consecutive unique five-second windows; exact 5-s timestamp increments; disjoint excerpts",
+  "features": [
+    "mean:acc_x",
+    "mean:acc_y",
+    "mean:acc_z",
+    "mean:gyr_x",
+    "mean:gyr_y",
+    "mean:gyr_z",
+    "mean:mag_x",
+    "mean:mag_y",
+    "mean:mag_z",
+    "log_std:acc_x",
+    "log_std:acc_y",
+    "log_std:acc_z",
+    "log_std:gyr_x",
+    "log_std:gyr_y",
+    "log_std:gyr_z",
+    "log_std:mag_x",
+    "log_std:mag_y",
+    "log_std:mag_z",
+    "log_diff_rms:acc_x",
+    "log_diff_rms:acc_y",
+    "log_diff_rms:acc_z",
+    "log_diff_rms:gyr_x",
+    "log_diff_rms:gyr_y",
+    "log_diff_rms:gyr_z",
+    "log_diff_rms:mag_x",
+    "log_diff_rms:mag_y",
+    "log_diff_rms:mag_z",
+    "power_0.1_1Hz:acc_x",
+    "power_0.1_1Hz:acc_y",
+    "power_0.1_1Hz:acc_z",
+    "power_0.1_1Hz:gyr_x",
+    "power_0.1_1Hz:gyr_y",
+    "power_0.1_1Hz:gyr_z",
+    "power_0.1_1Hz:mag_x",
+    "power_0.1_1Hz:mag_y",
+    "power_0.1_1Hz:mag_z",
+    "power_1_5Hz:acc_x",
+    "power_1_5Hz:acc_y",
+    "power_1_5Hz:acc_z",
+    "power_1_5Hz:gyr_x",
+    "power_1_5Hz:gyr_y",
+    "power_1_5Hz:gyr_z",
+    "power_1_5Hz:mag_x",
+    "power_1_5Hz:mag_y",
+    "power_1_5Hz:mag_z"
+  ],
+  "feature_scaling": "Weighted mean / standard deviation per feature and class fitted only to real excerpts; Euclidean distance / sqrt(45)",
+  "clustering": "Weighted PAM, distinct-subject medoids, six starts; fixed k requested, no claim of optimal k or global minimum",
+  "requested_medoids_per_class": 3,
+  "participant_weighting": "Each real participant contributes equal total weight within their class",
+  "matching": "Minimum-total-feature-distance unique assignment to existing class-specific BiGRU sequences",
+  "caveats": [
+    "Thirty-second labelled excerpts have no gesture-level boundaries and do not prove a complete action.",
+    "Synthetic excerpts concatenate 125 independent 24-step segments, not a jointly generated 30-second action.",
+    "Matches are illustrative nearest neighbours, not paired reconstructions or estimates of typical fidelity.",
+    "Gyroscope physical unit is unverified; figures preserve source values."
+  ],
+  "classes": {
+    "drink": {
+      "n_real_candidates": 939,
+      "n_synthetic_candidates": 2200,
+      "real_subjects": 55,
+      "reconstruction": {
+        "gaps_not_crossed": 214,
+        "quality_rejected": 0
+      },
+      "optimization": {
+        "weighted_distance_objective": 0.8282203390950627,
+        "swap_iterations": 1,
+        "restarts": 6,
+        "distinct_participant_constraint": true
+      },
+      "weighted_silhouette": 0.14963538330375614,
+      "pca_explained_variance": [
+        0.34852088303933526,
+        0.15446136631774587
+      ],
+      "generator": {
+        "generator_dir": "/mnt/beegfs/home/elian.riveros/deo_runs_replica_dedup_perclass/generators/gru_drink_w24",
+        "config": {
+          "hidden_size": 256,
+          "num_heads": 4,
+          "n_encoder": 1,
+          "n_decoder": 3,
+          "mlp_ratio": 4.0,
+          "diffusion_steps": 500,
+          "noise_schedule": "cosine",
+          "loss": "MSE_MMD",
+          "predict_xstart": true,
+          "batch_size": 512,
+          "lr": 0.0001,
+          "lr_anneal_steps": 300000,
+          "mmd_alpha": 0.0005,
+          "window": 24,
+          "n_features": 9,
+          "arch": "gru",
+          "data": "/mnt/beegfs/home/elian.riveros/deo_data/deo_dedup/generator/drink_w24.npy",
+          "n_train_segments": 255960,
+          "seed": 0,
+          "scaler": {
+            "lo": [
+              -27.301082611083984,
+              -57.635616302490234,
+              -23.779211044311523,
+              -744.8701782226562,
+              -509.3200988769531,
+              -493.57012939453125,
+              -49.07999801635742,
+              -44.57999801635742,
+              -25.3799991607666
+            ],
+            "hi": [
+              30.368053436279297,
+              41.644744873046875,
+              47.232810974121094,
+              1419.810302734375,
+              401.8000793457031,
+              480.2001037597656,
+              29.51999855041504,
+              35.81999969482422,
+              72.1199951171875
+            ]
+          }
+        },
+        "training_data_metadata": {
+          "class": "drink",
+          "window": 24,
+          "stride": 12,
+          "n_segments": 255960,
+          "n_source_windows": 6399,
+          "train_subjects": 55,
+          "subjects_used": [
+            "S1003",
+            "S1004",
+            "S1007",
+            "S1009",
+            "S1013",
+            "S1015",
+            "S1029",
+            "S1036",
+            "S1039",
+            "S1044",
+            "S1045",
+            "S1046",
+            "S1047",
+            "S1048",
+            "S1052",
+            "S1054",
+            "S1055",
+            "S1061",
+            "S1063",
+            "S1064",
+            "S1065",
+            "S1067",
+            "S1069",
+            "S1070",
+            "S1073",
+            "S1074",
+            "S1075",
+            "S1078",
+            "S1079",
+            "S1080",
+            "S1082",
+            "S1084",
+            "S1348",
+            "S1349",
+            "S1350",
+            "S1355",
+            "S1356",
+            "S1358",
+            "S1359",
+            "S1500",
+            "S1533",
+            "S1535",
+            "S1536",
+            "S1538",
+            "S1539",
+            "S1615",
+            "S1659",
+            "S1686",
+            "S1687",
+            "S1688",
+            "S1690",
+            "S1692",
+            "S1693",
+            "S1694",
+            "S1696"
+          ],
+          "val_or_test_subjects_used": [],
+          "max_abs_acc": 156.96,
+          "windows_dropped_implausible_acc": 0,
+          "subjects_with_dropped_windows": []
+        },
+        "shards": [
+          {
+            "path": "/mnt/beegfs/home/elian.riveros/deo_runs_replica_dedup_perclass/generators/gru_drink_w24/samples_shard0.npy",
+            "completion": {
+              "checkpoint": "/mnt/beegfs/home/elian.riveros/deo_runs_replica_dedup_perclass/generators/gru_drink_w24/model_100000.pt",
+              "arch": "gru",
+              "n": 275037,
+              "window": 24,
+              "respacing": 500,
+              "seconds_this_run": 1048.8,
+              "gpu": "NVIDIA H200"
+            },
+            "unused_tail_segments": 37
+          }
+        ],
+        "segments_per_excerpt": 125,
+        "assembly": "Consecutive original segments, disjoint, within one shard, without smoothing or reordering"
+      },
+      "examples": [
+        {
+          "medoid_id": "M1",
+          "real": {
+            "candidate_id": 841,
+            "subject": "S1688",
+            "label": 0,
+            "hand": "R",
+            "dominance": "D",
+            "moment": "MB",
+            "timestamp_start": 1702328411,
+            "timestamp_end_exclusive": 1702328441,
+            "dataset_indices": [
+              15948,
+              15949,
+              15950,
+              15951,
+              15952,
+              15953
+            ],
+            "participant_weight": 0.000956937799043062,
+            "cluster": 1,
+            "is_medoid": true,
+            "distance_to_medoid": 0.0
+          },
+          "synthetic": {
+            "candidate_id": 648,
+            "shard": "/mnt/beegfs/home/elian.riveros/deo_runs_replica_dedup_perclass/generators/gru_drink_w24/samples_shard0.npy",
+            "segment_start": 81000,
+            "segment_stop_exclusive": 81125,
+            "is_selected": true
+          },
+          "cluster_weight": 0.5066049370306336,
+          "cluster_excerpts": 476,
+          "cluster_participants": 52,
+          "match_feature_distance": 5.750854249456901,
+          "unconstrained_nearest_synthetic_id": 648,
+          "synthetic_match_distance_rank": 1,
+          "pointwise_train_z_rmse": 0.5493670853513718,
+          "real_sha256": "d3d92c82da750896c36a790fa196e78bbbb7a5f8c65ef88d75ed31664a9e207f",
+          "synthetic_sha256": "6abc6bce7d636da8829c126c645007f09bd09e9b73947aa89f51fa1757a63d8b"
+        },
+        {
+          "medoid_id": "M2",
+          "real": {
+            "candidate_id": 279,
+            "subject": "S1061",
+            "label": 0,
+            "hand": "R",
+            "dominance": "D",
+            "moment": "MB",
+            "timestamp_start": 1677511818,
+            "timestamp_end_exclusive": 1677511848,
+            "dataset_indices": [
+              16783,
+              16784,
+              16785,
+              16786,
+              16787,
+              16788
+            ],
+            "participant_weight": 0.0011363636363636363,
+            "cluster": 2,
+            "is_medoid": true,
+            "distance_to_medoid": 0.0
+          },
+          "synthetic": {
+            "candidate_id": 123,
+            "shard": "/mnt/beegfs/home/elian.riveros/deo_runs_replica_dedup_perclass/generators/gru_drink_w24/samples_shard0.npy",
+            "segment_start": 15375,
+            "segment_stop_exclusive": 15500,
+            "is_selected": true
+          },
+          "cluster_weight": 0.44533710613431965,
+          "cluster_excerpts": 419,
+          "cluster_participants": 50,
+          "match_feature_distance": 5.619146455638276,
+          "unconstrained_nearest_synthetic_id": 648,
+          "synthetic_match_distance_rank": 2,
+          "pointwise_train_z_rmse": 0.6221356246009435,
+          "real_sha256": "e874b066c17ec1a9740493c40b8a37f5c6a60f35c2b28ebe6ef20fbaa04b9d26",
+          "synthetic_sha256": "f17bd68e9a562b329280369a45a96a98b9175e1875566a5ceb0e93794c5a40e7"
+        },
+        {
+          "medoid_id": "M3",
+          "real": {
+            "candidate_id": 166,
+            "subject": "S1045",
+            "label": 0,
+            "hand": "R",
+            "dominance": "D",
+            "moment": "MB",
+            "timestamp_start": 1675432675,
+            "timestamp_end_exclusive": 1675432705,
+            "dataset_indices": [
+              18123,
+              18124,
+              18125,
+              18126,
+              18127,
+              18128
+            ],
+            "participant_weight": 0.0010101010101010099,
+            "cluster": 3,
+            "is_medoid": true,
+            "distance_to_medoid": 0.0
+          },
+          "synthetic": {
+            "candidate_id": 606,
+            "shard": "/mnt/beegfs/home/elian.riveros/deo_runs_replica_dedup_perclass/generators/gru_drink_w24/samples_shard0.npy",
+            "segment_start": 75750,
+            "segment_stop_exclusive": 75875,
+            "is_selected": true
+          },
+          "cluster_weight": 0.0480579568350466,
+          "cluster_excerpts": 44,
+          "cluster_participants": 18,
+          "match_feature_distance": 5.614365851299071,
+          "unconstrained_nearest_synthetic_id": 606,
+          "synthetic_match_distance_rank": 1,
+          "pointwise_train_z_rmse": 0.5295501494514449,
+          "real_sha256": "65219bd9100aa2b08a2791dfe6b92f7621f5c586d784d830c66abbc75c58ab70",
+          "synthetic_sha256": "18588cf985b182162d639a816eee0a67f56a3ca082f0e453e9082beea214a54d"
+        }
+      ]
+    },
+    "eat": {
+      "n_real_candidates": 994,
+      "n_synthetic_candidates": 2200,
+      "real_subjects": 55,
+      "reconstruction": {
+        "gaps_not_crossed": 163,
+        "quality_rejected": 0
+      },
+      "optimization": {
+        "weighted_distance_objective": 0.8781099365240966,
+        "swap_iterations": 3,
+        "restarts": 6,
+        "distinct_participant_constraint": true
+      },
+      "weighted_silhouette": 0.09950486606258989,
+      "pca_explained_variance": [
+        0.24433079952289163,
+        0.20127859066338993
+      ],
+      "generator": {
+        "generator_dir": "/mnt/beegfs/home/elian.riveros/deo_runs_replica_dedup_perclass/generators/gru_eat_w24",
+        "config": {
+          "hidden_size": 256,
+          "num_heads": 4,
+          "n_encoder": 1,
+          "n_decoder": 3,
+          "mlp_ratio": 4.0,
+          "diffusion_steps": 500,
+          "noise_schedule": "cosine",
+          "loss": "MSE_MMD",
+          "predict_xstart": true,
+          "batch_size": 512,
+          "lr": 0.0001,
+          "lr_anneal_steps": 300000,
+          "mmd_alpha": 0.0005,
+          "window": 24,
+          "n_features": 9,
+          "arch": "gru",
+          "data": "/mnt/beegfs/home/elian.riveros/deo_data/deo_dedup/generator/eat_w24.npy",
+          "n_train_segments": 267880,
+          "seed": 0,
+          "scaler": {
+            "lo": [
+              -29.388826370239258,
+              -60.09685516357422,
+              -28.819005966186523,
+              -818.2301635742188,
+              -592.8301391601562,
+              -477.7500915527344,
+              -67.19999694824219,
+              -492.8999938964844,
+              -1285.260009765625
+            ],
+            "hi": [
+              44.66622543334961,
+              78.36222076416016,
+              67.89237976074219,
+              721.3501586914062,
+              579.7401123046875,
+              672.14013671875,
+              412.5,
+              36.89999771118164,
+              68.76000213623047
+            ]
+          }
+        },
+        "training_data_metadata": {
+          "class": "eat",
+          "window": 24,
+          "stride": 12,
+          "n_segments": 267880,
+          "n_source_windows": 6697,
+          "train_subjects": 55,
+          "subjects_used": [
+            "S1003",
+            "S1004",
+            "S1007",
+            "S1009",
+            "S1013",
+            "S1015",
+            "S1029",
+            "S1036",
+            "S1039",
+            "S1044",
+            "S1045",
+            "S1046",
+            "S1047",
+            "S1048",
+            "S1052",
+            "S1054",
+            "S1055",
+            "S1061",
+            "S1063",
+            "S1064",
+            "S1065",
+            "S1067",
+            "S1069",
+            "S1070",
+            "S1073",
+            "S1074",
+            "S1075",
+            "S1078",
+            "S1079",
+            "S1080",
+            "S1082",
+            "S1084",
+            "S1348",
+            "S1349",
+            "S1350",
+            "S1355",
+            "S1356",
+            "S1358",
+            "S1359",
+            "S1500",
+            "S1533",
+            "S1535",
+            "S1536",
+            "S1538",
+            "S1539",
+            "S1615",
+            "S1659",
+            "S1686",
+            "S1687",
+            "S1688",
+            "S1690",
+            "S1692",
+            "S1693",
+            "S1694",
+            "S1696"
+          ],
+          "val_or_test_subjects_used": [],
+          "max_abs_acc": 156.96,
+          "windows_dropped_implausible_acc": 0,
+          "subjects_with_dropped_windows": []
+        },
+        "shards": [
+          {
+            "path": "/mnt/beegfs/home/elian.riveros/deo_runs_replica_dedup_perclass/generators/gru_eat_w24/samples_shard0.npy",
+            "completion": {
+              "checkpoint": "/mnt/beegfs/home/elian.riveros/deo_runs_replica_dedup_perclass/generators/gru_eat_w24/model_100000.pt",
+              "arch": "gru",
+              "n": 275037,
+              "window": 24,
+              "respacing": 500,
+              "seconds_this_run": 1038.7,
+              "gpu": "NVIDIA H200"
+            },
+            "unused_tail_segments": 37
+          }
+        ],
+        "segments_per_excerpt": 125,
+        "assembly": "Consecutive original segments, disjoint, within one shard, without smoothing or reordering"
+      },
+      "examples": [
+        {
+          "medoid_id": "M1",
+          "real": {
+            "candidate_id": 685,
+            "subject": "S1359",
+            "label": 1,
+            "hand": "R",
+            "dominance": "D",
+            "moment": "MA",
+            "timestamp_start": 1690120035,
+            "timestamp_end_exclusive": 1690120065,
+            "dataset_indices": [
+              123,
+              124,
+              125,
+              126,
+              127,
+              128
+            ],
+            "participant_weight": 0.0010695187165775401,
+            "cluster": 1,
+            "is_medoid": true,
+            "distance_to_medoid": 0.0
+          },
+          "synthetic": {
+            "candidate_id": 1833,
+            "shard": "/mnt/beegfs/home/elian.riveros/deo_runs_replica_dedup_perclass/generators/gru_eat_w24/samples_shard0.npy",
+            "segment_start": 229125,
+            "segment_stop_exclusive": 229250,
+            "is_selected": true
+          },
+          "cluster_weight": 0.4093897399470155,
+          "cluster_excerpts": 404,
+          "cluster_participants": 44,
+          "match_feature_distance": 4.421221816997193,
+          "unconstrained_nearest_synthetic_id": 1833,
+          "synthetic_match_distance_rank": 1,
+          "pointwise_train_z_rmse": 0.8826977615822182,
+          "real_sha256": "d27b20baa24d9cc93ab13fd1f5349b9f7bbabfec2231337ccf8a168620931217",
+          "synthetic_sha256": "777a0d592c4b05dc063b0b8d3697e88a9fd7543d2204520d3fff4a1e0431ae72"
+        },
+        {
+          "medoid_id": "M2",
+          "real": {
+            "candidate_id": 191,
+            "subject": "S1046",
+            "label": 1,
+            "hand": "R",
+            "dominance": "D",
+            "moment": "MA",
+            "timestamp_start": 1675428183,
+            "timestamp_end_exclusive": 1675428213,
+            "dataset_indices": [
+              7239,
+              7240,
+              7241,
+              7242,
+              7243,
+              7244
+            ],
+            "participant_weight": 0.0011363636363636363,
+            "cluster": 2,
+            "is_medoid": true,
+            "distance_to_medoid": 0.0
+          },
+          "synthetic": {
+            "candidate_id": 1426,
+            "shard": "/mnt/beegfs/home/elian.riveros/deo_runs_replica_dedup_perclass/generators/gru_eat_w24/samples_shard0.npy",
+            "segment_start": 178250,
+            "segment_stop_exclusive": 178375,
+            "is_selected": true
+          },
+          "cluster_weight": 0.3952507047476088,
+          "cluster_excerpts": 393,
+          "cluster_participants": 48,
+          "match_feature_distance": 4.164669060399027,
+          "unconstrained_nearest_synthetic_id": 1426,
+          "synthetic_match_distance_rank": 1,
+          "pointwise_train_z_rmse": 0.9152682967770157,
+          "real_sha256": "d427d93fc47caaf28402ba6c1864d4c8b6ebfe949f83b59127b28862255a9c1f",
+          "synthetic_sha256": "a072baf8ca4ea7edbba5091261b75c6281d3efc3eefd30f2991252c532c430ee"
+        },
+        {
+          "medoid_id": "M3",
+          "real": {
+            "candidate_id": 49,
+            "subject": "S1007",
+            "label": 1,
+            "hand": "R",
+            "dominance": "D",
+            "moment": "MB",
+            "timestamp_start": 1675259471,
+            "timestamp_end_exclusive": 1675259501,
+            "dataset_indices": [
+              6465,
+              6466,
+              6467,
+              6468,
+              6469,
+              6470
+            ],
+            "participant_weight": 0.0011363636363636363,
+            "cluster": 3,
+            "is_medoid": true,
+            "distance_to_medoid": 0.0
+          },
+          "synthetic": {
+            "candidate_id": 2015,
+            "shard": "/mnt/beegfs/home/elian.riveros/deo_runs_replica_dedup_perclass/generators/gru_eat_w24/samples_shard0.npy",
+            "segment_start": 251875,
+            "segment_stop_exclusive": 252000,
+            "is_selected": true
+          },
+          "cluster_weight": 0.19535955530537577,
+          "cluster_excerpts": 197,
+          "cluster_participants": 28,
+          "match_feature_distance": 4.533458092253633,
+          "unconstrained_nearest_synthetic_id": 1833,
+          "synthetic_match_distance_rank": 3,
+          "pointwise_train_z_rmse": 0.8561556509106907,
+          "real_sha256": "ec71192446eb7817311ba60cc1de5c72b729c718b4cce188ca08e9bbf2d51b96",
+          "synthetic_sha256": "3c03cd038e9852048ea876e2838d741992f0b0dcfa6c1ed2d246f31970610b4e"
+        }
+      ]
+    }
+  }
+}

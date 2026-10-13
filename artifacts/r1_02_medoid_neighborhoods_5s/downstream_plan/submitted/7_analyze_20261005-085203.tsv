@@ -1,0 +1,1 @@
+tf	python -u /mnt/beegfs/home/elian.riveros/deo-classifier/scripts/analyze.py --runs /mnt/beegfs/home/elian.riveros/deo_runs_r1_02_neighborhoods --data-root /mnt/beegfs/home/elian.riveros/deo_data --data-name deo_dedup --main diff_gru_nbh_full_x1_es

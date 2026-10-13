@@ -261,9 +261,9 @@ def learning_curves(runs, out_dir, conds, seed=0, dataset="deo"):
     plt.close(fig)
 
 
-def class_balance(runs, data_root):
+def class_balance(runs, data_root, data_name="deo"):
     rows = []
-    tab = os.path.join(data_root, "deo", "dataset_table.csv")
+    tab = os.path.join(data_root, data_name, "dataset_table.csv")
     if os.path.exists(tab):
         t = pd.read_csv(tab)
         tr = t[t.partition == "train"].iloc[0]
@@ -314,6 +314,7 @@ def main():
     ap.add_argument("--runs", required=True)
     ap.add_argument("--data-root", required=True)
     ap.add_argument("--main", default="diff_gru_x10", help="main diffusion condition")
+    ap.add_argument("--data-name", default="deo", help="dataset folder for the class-balance table (e.g. deo_dedup)")
     args = ap.parse_args()
     out = os.path.join(args.runs, "analysis")
     os.makedirs(out, exist_ok=True)
@@ -379,7 +380,7 @@ def main():
 
     volume_curve(summary, out)
     learning_curves(args.runs, out, ["scratch", args.main])
-    class_balance(args.runs, args.data_root).to_csv(os.path.join(out, "class_balance.csv"), index=False)
+    class_balance(args.runs, args.data_root, args.data_name).to_csv(os.path.join(out, "class_balance.csv"), index=False)
     cost_table(args.runs).to_csv(os.path.join(out, "cost.csv"), index=False)
     print(open(os.path.join(out, "summary.md")).read())
     print(open(os.path.join(out, "bootstrap_ci.md")).read())

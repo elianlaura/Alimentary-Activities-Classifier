@@ -1,0 +1,3 @@
+activity,medoid,participant,moment,real_candidate,timestamp_start,seconds,cluster_percent,cluster_participants,synthetic_candidate,match_feature_distance,synthetic_match_rank
+drink,M1,S1078,MA,458,1677422831,30,99.99999999999999,55,648,5.702300516357446,1
+eat,M1,S1046,MA,192,1675428213,30,100.0,55,1426,4.2620009121233124,1

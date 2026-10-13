@@ -18,6 +18,8 @@ configs/
 __pycache__/
 *.pyc
 .ipynb_checkpoints/
+# local job report (see JOBS_REPORT.md)
+JOBS_REPORT.md
 # editors
 .vscode/
 *.code-workspace

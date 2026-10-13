@@ -38,6 +38,8 @@ def main():
     ap.add_argument("--multiplier", type=float, default=1.0, help="corpus size in units of R (ignored for real)")
     ap.add_argument("--scope", default="minority", choices=list(corpora.SCOPES))
     ap.add_argument("--generated", nargs="*", default=[], help="class=path.npy for --kind diffusion")
+    ap.add_argument("--class-counts", nargs="*", default=[], metavar="CLASS=N",
+                    help="exact windows per class for diffusion corpora; overrides --multiplier allocation")
     ap.add_argument("--out-dir", required=True)
     ap.add_argument("--seed", type=int, default=0)
     args = ap.parse_args()
@@ -53,13 +55,22 @@ def main():
         for p in paths.split(","):
             check_shard(p)
         generated[c] = corpora.ConcatArray(paths.split(","))
+    class_counts = {}
+    for item in args.class_counts:
+        c, value = item.split("=", 1)
+        if c in class_counts:
+            raise SystemExit("[corpus] duplicate --class-counts entry for %s" % c)
+        class_counts[c] = int(value)
+    if class_counts and args.kind != "diffusion":
+        raise SystemExit("[corpus] --class-counts is only valid with --kind diffusion")
     if args.kind == "diffusion":
         missing = set(corpora.SCOPES[args.scope]) - set(generated)
         if missing:
             raise SystemExit("[corpus] --generated has no samples for %s" % sorted(missing))
     stats = norm.load_stats(os.path.join(args.data_dir, "norm_train.json"))
     manifest = corpora.build(args.kind, args.out_dir, X, meta, split, args.multiplier, scope=args.scope,
-                             seed=args.seed, generated=generated, axis_std=np.asarray(stats["std"]))
+                             seed=args.seed, generated=generated, axis_std=np.asarray(stats["std"]),
+                             class_counts=class_counts or None)
     print("[corpus] %s" % manifest, flush=True)
 
 

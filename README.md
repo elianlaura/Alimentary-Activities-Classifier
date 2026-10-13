@@ -69,7 +69,7 @@ pretraining. Generator training and sampling resume from their last checkpoint.
 | 5 pretraining | `scripts/pretrain.py` | tf | `pretrain/<corpus>/seed<k>/autoencoder.keras` |
 | 6 fine-tuning | `scripts/finetune.py` | tf | `finetune/<dataset>/<condition>/seed<k>/` metrics, predictions, history |
 | 7 analysis | `scripts/analyze.py` | tf | `analysis/{summary.md, bootstrap_ci.md, comparisons.md, volume_curve.pdf, learning_curves.pdf, class_balance.csv, cost.csv}` |
-| extra | `scripts/complexity.py`, `scripts/plot_synthetic.py`, `scripts/describe_models.py` | tf | complexity table, real vs synthetic figure, layer tables |
+| extra | `scripts/complexity.py`, `scripts/plot_r1_02_medoids.py`, `scripts/plot_r1_02.py`, `scripts/plot_synthetic.py`, `scripts/describe_models.py` | tf | complexity table, 30-s real training medoids and class-specific synthetic matches, distributions, layer tables |
 
 Corrected protocol (differences with the archived runs in `docs/REPRODUCIBILITY.md`): fixed
 subject split; generators trained per class on training subjects only (windows with physically

@@ -1,0 +1,152 @@
+{
+  "drink": {
+    "candidate_ids": [
+      841,
+      279,
+      166
+    ],
+    "records": [
+      {
+        "candidate_id": 841,
+        "subject": "S1688",
+        "label": 0,
+        "hand": "R",
+        "dominance": "D",
+        "moment": "MB",
+        "timestamp_start": 1702328411,
+        "timestamp_end_exclusive": 1702328441,
+        "dataset_indices": [
+          15948,
+          15949,
+          15950,
+          15951,
+          15952,
+          15953
+        ],
+        "participant_weight": 0.000956937799043062,
+        "cluster": 1,
+        "is_medoid": true,
+        "distance_to_medoid": 0.0
+      },
+      {
+        "candidate_id": 279,
+        "subject": "S1061",
+        "label": 0,
+        "hand": "R",
+        "dominance": "D",
+        "moment": "MB",
+        "timestamp_start": 1677511818,
+        "timestamp_end_exclusive": 1677511848,
+        "dataset_indices": [
+          16783,
+          16784,
+          16785,
+          16786,
+          16787,
+          16788
+        ],
+        "participant_weight": 0.0011363636363636363,
+        "cluster": 2,
+        "is_medoid": true,
+        "distance_to_medoid": 0.0
+      },
+      {
+        "candidate_id": 166,
+        "subject": "S1045",
+        "label": 0,
+        "hand": "R",
+        "dominance": "D",
+        "moment": "MB",
+        "timestamp_start": 1675432675,
+        "timestamp_end_exclusive": 1675432705,
+        "dataset_indices": [
+          18123,
+          18124,
+          18125,
+          18126,
+          18127,
+          18128
+        ],
+        "participant_weight": 0.0010101010101010099,
+        "cluster": 3,
+        "is_medoid": true,
+        "distance_to_medoid": 0.0
+      }
+    ]
+  },
+  "eat": {
+    "candidate_ids": [
+      685,
+      191,
+      49
+    ],
+    "records": [
+      {
+        "candidate_id": 685,
+        "subject": "S1359",
+        "label": 1,
+        "hand": "R",
+        "dominance": "D",
+        "moment": "MA",
+        "timestamp_start": 1690120035,
+        "timestamp_end_exclusive": 1690120065,
+        "dataset_indices": [
+          123,
+          124,
+          125,
+          126,
+          127,
+          128
+        ],
+        "participant_weight": 0.0010695187165775401,
+        "cluster": 1,
+        "is_medoid": true,
+        "distance_to_medoid": 0.0
+      },
+      {
+        "candidate_id": 191,
+        "subject": "S1046",
+        "label": 1,
+        "hand": "R",
+        "dominance": "D",
+        "moment": "MA",
+        "timestamp_start": 1675428183,
+        "timestamp_end_exclusive": 1675428213,
+        "dataset_indices": [
+          7239,
+          7240,
+          7241,
+          7242,
+          7243,
+          7244
+        ],
+        "participant_weight": 0.0011363636363636363,
+        "cluster": 2,
+        "is_medoid": true,
+        "distance_to_medoid": 0.0
+      },
+      {
+        "candidate_id": 49,
+        "subject": "S1007",
+        "label": 1,
+        "hand": "R",
+        "dominance": "D",
+        "moment": "MB",
+        "timestamp_start": 1675259471,
+        "timestamp_end_exclusive": 1675259501,
+        "dataset_indices": [
+          6465,
+          6466,
+          6467,
+          6468,
+          6469,
+          6470
+        ],
+        "participant_weight": 0.0011363636363636363,
+        "cluster": 3,
+        "is_medoid": true,
+        "distance_to_medoid": 0.0
+      }
+    ]
+  }
+}

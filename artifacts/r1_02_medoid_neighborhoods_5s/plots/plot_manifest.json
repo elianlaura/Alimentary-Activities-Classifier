@@ -1,0 +1,29 @@
+{
+  "input_dir": "/mnt/beegfs/home/elian.riveros/deo-classifier/artifacts/r1_02_medoid_neighborhoods_5s",
+  "method": "t-SNE applied separately per activity to the saved standardized 45-feature vectors",
+  "selection_warning": "t-SNE is visualization only; medoids and neighborhoods were selected before projection in 45D",
+  "parameters": {
+    "random_state": 42,
+    "perplexity": 50.0,
+    "max_iter": 1500,
+    "learning_rate": "auto",
+    "init": "pca",
+    "metric": "euclidean",
+    "method": "barnes_hut",
+    "angle": 0.5
+  },
+  "activities": {
+    "drink": {
+      "n_windows": 6399,
+      "kl_divergence": 1.7100921869277954,
+      "iterations_completed": 1499,
+      "coordinates": "/mnt/beegfs/home/elian.riveros/deo-classifier/artifacts/r1_02_medoid_neighborhoods_5s/plots/drink_tsne_coordinates.csv"
+    },
+    "eat": {
+      "n_windows": 6697,
+      "kl_divergence": 2.2012810707092285,
+      "iterations_completed": 1499,
+      "coordinates": "/mnt/beegfs/home/elian.riveros/deo-classifier/artifacts/r1_02_medoid_neighborhoods_5s/plots/eat_tsne_coordinates.csv"
+    }
+  }
+}

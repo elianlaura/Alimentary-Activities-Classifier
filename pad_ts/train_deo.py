@@ -41,6 +41,9 @@ def main():
     ap.add_argument("--mmd-alpha", type=float, default=d["mmd_alpha"])
     ap.add_argument("--save-every", type=int, default=5000)
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--scaler-data", default=None,
+                    help="(n, W, 9) .npy to fit the min-max scaler on instead of --data (e.g. the activity's "
+                         "full-neighborhood array, so every neighborhood shares one scaler)")
     args = ap.parse_args()
 
     os.makedirs(args.out_dir, exist_ok=True)
@@ -61,12 +64,16 @@ def main():
         cfg = json.load(open(cfg_path))
         scaler = MinMaxScaler(cfg["scaler"]["lo"], cfg["scaler"]["hi"])
     else:
-        scaler = MinMaxScaler().fit(x)
+        scaler_src = os.path.abspath(args.scaler_data or args.data)
+        scaler = MinMaxScaler().fit(x if args.scaler_data is None else np.load(args.scaler_data).astype(np.float32))
+        z = scaler.transform(x)
+        if z.min() < -1.0 - 1e-5 or z.max() > 1.0 + 1e-5:
+            raise SystemExit("[train] --data falls outside the --scaler-data range [%.4f, %.4f]" % (z.min(), z.max()))
         cfg = dict(d, window=int(x.shape[1]), n_features=int(x.shape[2]), arch=args.arch, data=os.path.abspath(args.data),
                    n_train_segments=int(len(x)), hidden_size=args.hidden_size, num_heads=args.num_heads,
                    n_encoder=args.n_encoder, n_decoder=args.n_decoder, diffusion_steps=args.diffusion_steps,
                    batch_size=args.batch_size, lr=args.lr, lr_anneal_steps=args.anneal_steps,
-                   mmd_alpha=args.mmd_alpha, seed=args.seed, scaler=scaler.to_dict())
+                   mmd_alpha=args.mmd_alpha, seed=args.seed, scaler=scaler.to_dict(), scaler_data=scaler_src)
         save_json(cfg_path, cfg)
     data = torch.from_numpy(scaler.transform(x).astype(np.float32))
 

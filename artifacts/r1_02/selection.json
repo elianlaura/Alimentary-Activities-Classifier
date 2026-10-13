@@ -1,0 +1,142 @@
+{
+  "selection_method": {
+    "real": "feature medoid among candidates in the 60th-80th percentile of motion energy",
+    "synthetic": "nearest to the same real window by RMSE after real-train z-scoring"
+  },
+  "seed": 0,
+  "data_dir": "/mnt/beegfs/home/elian.riveros/deo_data/deo",
+  "per_class_corpus": "/mnt/beegfs/home/elian.riveros/deo_runs/corpora/diff_gru_x10",
+  "pooled_corpus": "/mnt/beegfs/home/elian.riveros/deo_runs/corpora/diff_gru_pooled_x2",
+  "per_class_manifest": {
+    "kind": "diffusion",
+    "scope": "minority",
+    "multiplier": 10.0,
+    "volume_unit_R": 21138,
+    "n_windows": 211380,
+    "per_class": {
+      "drink": 105690,
+      "eat": 105690
+    },
+    "seed": 0,
+    "real_train_windows_per_class": {
+      "drink": 10301,
+      "eat": 10837,
+      "other": 126827
+    }
+  },
+  "pooled_manifest": {
+    "kind": "diffusion",
+    "scope": "pooled",
+    "multiplier": 2.0,
+    "volume_unit_R": 21138,
+    "n_windows": 42276,
+    "per_class": {
+      "drinkeat": 42276
+    },
+    "seed": 0,
+    "real_train_windows_per_class": {
+      "drink": 10301,
+      "eat": 10837,
+      "other": 126827
+    }
+  },
+  "train_subject_count": 55,
+  "generator_training_provenance": {
+    "drink": {
+      "metadata_file": "/mnt/beegfs/home/elian.riveros/deo_data/deo/generator/drink_w24.json",
+      "window": 24,
+      "n_source_windows": 10301,
+      "subjects_used": 55,
+      "all_subjects_in_train_split": true,
+      "val_or_test_subjects_used": []
+    },
+    "eat": {
+      "metadata_file": "/mnt/beegfs/home/elian.riveros/deo_data/deo/generator/eat_w24.json",
+      "window": 24,
+      "n_source_windows": 10837,
+      "subjects_used": 55,
+      "all_subjects_in_train_split": true,
+      "val_or_test_subjects_used": []
+    },
+    "drinkeat": {
+      "metadata_file": "/mnt/beegfs/home/elian.riveros/deo_data/deo/generator/drinkeat_w24.json",
+      "window": 24,
+      "n_source_windows": 21138,
+      "subjects_used": 55,
+      "all_subjects_in_train_split": true,
+      "val_or_test_subjects_used": []
+    }
+  },
+  "classes": {
+    "drink": {
+      "real": {
+        "dataset_index": 24369,
+        "subject": "S1054",
+        "timestamp": 1676303097,
+        "activity": "DRINK",
+        "split": "train",
+        "n_candidates": 2000,
+        "motion_percentile_interval": [
+          60,
+          80
+        ],
+        "candidate_motion_interval": [
+          0.0009624643716961143,
+          0.0018787023611366754
+        ],
+        "selected_motion": 0.0011612051166594028,
+        "feature_medoid_distance": 0.7262007594108582
+      },
+      "per_class_synthetic": {
+        "corpus_index": 89651,
+        "n_candidates": 20000,
+        "z_scored_rmse": 0.5279805047814363
+      },
+      "pooled_synthetic": {
+        "corpus_index": 33223,
+        "n_candidates": 20000,
+        "z_scored_rmse": 0.5681455281979424
+      },
+      "lower_rmse_source": "per_class"
+    },
+    "eat": {
+      "real": {
+        "dataset_index": 1068,
+        "subject": "S1615",
+        "timestamp": 1699529527,
+        "activity": "EAT",
+        "split": "train",
+        "n_candidates": 2000,
+        "motion_percentile_interval": [
+          60,
+          80
+        ],
+        "candidate_motion_interval": [
+          0.0033155041281133888,
+          0.005672181118279696
+        ],
+        "selected_motion": 0.004411202389746904,
+        "feature_medoid_distance": 0.5784018635749817
+      },
+      "per_class_synthetic": {
+        "corpus_index": 173229,
+        "n_candidates": 20000,
+        "z_scored_rmse": 0.6865836669200938
+      },
+      "pooled_synthetic": {
+        "corpus_index": 11590,
+        "n_candidates": 20000,
+        "z_scored_rmse": 0.6544195259488715
+      },
+      "lower_rmse_source": "pooled"
+    }
+  },
+  "selected_sources": {
+    "drink": "per_class",
+    "eat": "pooled"
+  },
+  "outputs": [
+    "/mnt/beegfs/home/elian.riveros/deo-classifier/artifacts/r1_02/r1_02_one_sample_per_activity.png",
+    "/mnt/beegfs/home/elian.riveros/deo-classifier/artifacts/r1_02/r1_02_one_sample_per_activity.pdf"
+  ]
+}

@@ -1,0 +1,94 @@
+{
+  "generator": "PaD-TS BiGRU",
+  "neighborhood": "full",
+  "window_seconds": 5,
+  "sampling_rate_hz": 100,
+  "n_axes": 9,
+  "n_per_activity": 5,
+  "selection": "smallest distance to the fixed real activity medoid in the standardized 45-feature space",
+  "interpretation": "Independent synthetic windows; no participant or recording identity and no one-to-one match to real recordings",
+  "activities": {
+    "drink": {
+      "samples_path": "/mnt/beegfs/home/elian.riveros/deo_runs_r1_02_neighborhoods/generators/gru_drink_full_w500/samples_2x.npy",
+      "checkpoint": "/mnt/beegfs/home/elian.riveros/deo_runs_r1_02_neighborhoods/generators/gru_drink_full_w500/model_100000.pt",
+      "selected": [
+        {
+          "activity": "drink",
+          "representative_rank": 1,
+          "synthetic_index": 1116,
+          "distance_to_real_medoid": 1.2101155519485474,
+          "plot_stem": "synthetic_drink_representative_01_full_idx01116"
+        },
+        {
+          "activity": "drink",
+          "representative_rank": 2,
+          "synthetic_index": 10256,
+          "distance_to_real_medoid": 1.2309209108352661,
+          "plot_stem": "synthetic_drink_representative_02_full_idx10256"
+        },
+        {
+          "activity": "drink",
+          "representative_rank": 3,
+          "synthetic_index": 11149,
+          "distance_to_real_medoid": 1.2457518577575684,
+          "plot_stem": "synthetic_drink_representative_03_full_idx11149"
+        },
+        {
+          "activity": "drink",
+          "representative_rank": 4,
+          "synthetic_index": 8320,
+          "distance_to_real_medoid": 1.2639191150665283,
+          "plot_stem": "synthetic_drink_representative_04_full_idx08320"
+        },
+        {
+          "activity": "drink",
+          "representative_rank": 5,
+          "synthetic_index": 5617,
+          "distance_to_real_medoid": 1.2672466039657593,
+          "plot_stem": "synthetic_drink_representative_05_full_idx05617"
+        }
+      ]
+    },
+    "eat": {
+      "samples_path": "/mnt/beegfs/home/elian.riveros/deo_runs_r1_02_neighborhoods/generators/gru_eat_full_w500/samples_2x.npy",
+      "checkpoint": "/mnt/beegfs/home/elian.riveros/deo_runs_r1_02_neighborhoods/generators/gru_eat_full_w500/model_100000.pt",
+      "selected": [
+        {
+          "activity": "eat",
+          "representative_rank": 1,
+          "synthetic_index": 9315,
+          "distance_to_real_medoid": 0.7637482285499573,
+          "plot_stem": "synthetic_eat_representative_01_full_idx09315"
+        },
+        {
+          "activity": "eat",
+          "representative_rank": 2,
+          "synthetic_index": 4655,
+          "distance_to_real_medoid": 0.7664230465888977,
+          "plot_stem": "synthetic_eat_representative_02_full_idx04655"
+        },
+        {
+          "activity": "eat",
+          "representative_rank": 3,
+          "synthetic_index": 144,
+          "distance_to_real_medoid": 0.774304986000061,
+          "plot_stem": "synthetic_eat_representative_03_full_idx00144"
+        },
+        {
+          "activity": "eat",
+          "representative_rank": 4,
+          "synthetic_index": 4251,
+          "distance_to_real_medoid": 0.7782793641090393,
+          "plot_stem": "synthetic_eat_representative_04_full_idx04251"
+        },
+        {
+          "activity": "eat",
+          "representative_rank": 5,
+          "synthetic_index": 11543,
+          "distance_to_real_medoid": 0.7845051288604736,
+          "plot_stem": "synthetic_eat_representative_05_full_idx11543"
+        }
+      ]
+    }
+  }
+}
